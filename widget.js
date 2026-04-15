@@ -72,11 +72,16 @@ $title.addEventListener('click', (e) => {
 
 $title.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); $title.blur() }
-  if (e.key === 'Escape') { renderTitle(widgetData.title); $title.contentEditable = 'false' }
+  if (e.key === 'Escape') {
+    renderTitle(widgetData.title)
+    $title.contentEditable = 'false'
+    $title.scrollLeft = 0
+  }
 })
 
 $title.addEventListener('blur', () => {
   $title.contentEditable = 'false'
+  $title.scrollLeft = 0  // 편집 후 스크롤을 처음으로 되돌려 앞부분부터 표시
   const newTitle = $title.textContent.trim()
   widgetData.title = newTitle
   renderTitle(newTitle)
