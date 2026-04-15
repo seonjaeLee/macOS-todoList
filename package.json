@@ -1,0 +1,39 @@
+{
+  "name": "desktop-todo",
+  "version": "1.0.0",
+  "description": "macOS desktop post-it todo widget",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "node generate-icon.js && electron-builder --mac dir && cp -R \"dist/mac-arm64/todoList-myfunfun.app\" /Applications/"
+  },
+  "build": {
+    "appId": "com.desktop-todo",
+    "productName": "todoList-myfunfun",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "identity": null
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "widget.html",
+      "widget.css",
+      "widget.js",
+      "guide.html",
+      "todoList-icon.png"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^41.1.1",
+    "electron-builder": "^25.1.8"
+  }
+}

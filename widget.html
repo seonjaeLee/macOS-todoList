@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo Widget</title>
+  <link rel="stylesheet" href="widget.css" />
+</head>
+<body>
+  <div class="widget" id="widget">
+
+    <!-- 타이틀바 (드래그 + 더블클릭 접기) -->
+    <div class="titlebar" id="titlebar">
+      <button class="btn-collapse" id="btn-collapse">▾</button>
+      <span class="title" id="title" spellcheck="false">메모</span>
+      <div class="titlebar-actions">
+        <button class="btn-palette" id="btn-palette" title="색상 변경"></button>
+        <input type="color" id="color-input" class="color-input" />
+        <button class="btn-add-widget" id="btn-add-widget" title="새 위젯 추가">＋</button>
+        <button class="btn-close" id="btn-close" title="위젯 닫기">✕</button>
+      </div>
+    </div>
+
+    <!-- 본문 (접기 시 숨김) -->
+    <div class="body" id="body">
+
+      <!-- 개요 -->
+      <textarea
+        id="memo-desc"
+        class="memo-desc"
+        placeholder="개요를 입력하세요..."
+        spellcheck="false"
+      ></textarea>
+
+      <!-- 할일 입력 -->
+      <div class="input-row">
+        <input
+          type="text"
+          id="new-todo"
+          class="new-todo"
+          placeholder="할 일 추가..."
+          maxlength="80"
+        />
+        <button class="btn-add-todo" id="btn-add-todo">＋</button>
+      </div>
+
+      <!-- 할일 목록 -->
+      <ul class="todo-list" id="todo-list"></ul>
+
+      <!-- 완료 항목 삭제 -->
+      <div class="footer">
+        <button class="btn-clear" id="btn-clear">완료 항목 삭제</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 리사이즈 핸들 -->
+  <div class="resize-handle resize-e"  data-edge="right"></div>
+  <div class="resize-handle resize-w"  data-edge="left"></div>
+  <div class="resize-handle resize-s"  data-edge="bottom"></div>
+  <div class="resize-handle resize-se" data-edge="bottom-right"></div>
+  <div class="resize-handle resize-sw" data-edge="bottom-left"></div>
+
+  <script src="widget.js"></script>
+</body>
+</html>
