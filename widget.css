@@ -419,3 +419,23 @@ body {
 .resize-se { bottom: 0; right: 0; width: 10px; height: 10px; cursor: se-resize; }
 .resize-sw { bottom: 0; left: 0;  width: 10px; height: 10px; cursor: sw-resize; }
 
+/* ── 저명도(명도 80% 이하) 대비 모드: 텍스트를 흰색 계열로 전환 ── */
+body.low-light .btn-collapse,
+body.low-light .title,
+body.low-light .btn-add-widget,
+body.low-light .btn-close,
+body.low-light .memo-desc,
+body.low-light .new-todo,
+body.low-light .btn-add-todo,
+body.low-light .todo-label,
+body.low-light .btn-remove-item,
+body.low-light .btn-clear {
+  color: rgba(255,255,255,0.92) !important;
+}
+
+body.low-light .title.is-placeholder,
+body.low-light .memo-desc::placeholder,
+body.low-light .new-todo::placeholder {
+  color: rgba(255,255,255,0.6) !important;
+}
+

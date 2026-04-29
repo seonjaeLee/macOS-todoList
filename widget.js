@@ -44,6 +44,52 @@ window.api.onInitWidget((data) => {
 // ───────────────────────────── 색상 적용 ─────────────────────────────
 function applyColor(color) {
   document.documentElement.style.setProperty('--widget-color', color)
+  document.body.classList.toggle('low-light', isLowLightColor(color))
+}
+
+function isLowLightColor(hexColor) {
+  const rgb = hexToRgb(hexColor)
+  if (!rgb) return false
+  const { l } = rgbToHsl(rgb.r, rgb.g, rgb.b)
+  return l <= 80
+}
+
+function hexToRgb(hexColor) {
+  const hex = hexColor.replace('#', '')
+  const normalized = hex.length === 3
+    ? hex.split('').map((c) => c + c).join('')
+    : hex
+
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return null
+
+  return {
+    r: parseInt(normalized.slice(0, 2), 16),
+    g: parseInt(normalized.slice(2, 4), 16),
+    b: parseInt(normalized.slice(4, 6), 16),
+  }
+}
+
+function rgbToHsl(r, g, b) {
+  const rn = r / 255
+  const gn = g / 255
+  const bn = b / 255
+  const max = Math.max(rn, gn, bn)
+  const min = Math.min(rn, gn, bn)
+  const delta = max - min
+
+  let h = 0
+  const l = (max + min) / 2
+  let s = 0
+
+  if (delta !== 0) {
+    s = delta / (1 - Math.abs(2 * l - 1))
+    if (max === rn) h = 60 * (((gn - bn) / delta) % 6)
+    else if (max === gn) h = 60 * ((bn - rn) / delta + 2)
+    else h = 60 * ((rn - gn) / delta + 4)
+  }
+
+  if (h < 0) h += 360
+  return { h, s: s * 100, l: l * 100 }
 }
 
 // ───────────────────────────── 타이틀 렌더 (빈 제목 → 플레이스홀더) ─────────────────────────────

@@ -143,9 +143,32 @@ const WIDGET_W = 260
 const WIDGET_H_EXPANDED = 340
 const WIDGET_H_COLLAPSED = 44
 
-function getNextColor(existingData) {
-  const usedColors = existingData.map((d) => d.color)
-  return COLORS.find((c) => !usedColors.includes(c)) || COLORS[existingData.length % COLORS.length]
+function hslToHex(h, s, l) {
+  const saturation = s / 100
+  const lightness = l / 100
+  const c = (1 - Math.abs(2 * lightness - 1)) * saturation
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
+  const m = lightness - c / 2
+  let r = 0
+  let g = 0
+  let b = 0
+
+  if (h < 60) [r, g, b] = [c, x, 0]
+  else if (h < 120) [r, g, b] = [x, c, 0]
+  else if (h < 180) [r, g, b] = [0, c, x]
+  else if (h < 240) [r, g, b] = [0, x, c]
+  else if (h < 300) [r, g, b] = [x, 0, c]
+  else [r, g, b] = [c, 0, x]
+
+  const toHex = (value) => Math.round((value + m) * 255).toString(16).padStart(2, '0')
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
+}
+
+function getRandomBrightColor() {
+  const hue = Math.floor(Math.random() * 360)
+  const saturation = 45 + Math.floor(Math.random() * 36) // 45~80%
+  const lightness = 90 + Math.floor(Math.random() * 7)   // 90~96%
+  return hslToHex(hue, saturation, lightness)
 }
 
 function createWidget(data) {
@@ -335,11 +358,11 @@ ipcMain.on('close-guide', () => {
 
 // ───────────────────────────── IPC 핸들러 ─────────────────────────────
 function addNewWidget() {
-  const all = [...widgetStates.values()].map((s) => s.data)
+  const randomColor = getRandomBrightColor()
   const newData = {
     id: `widget-${Date.now()}`,
     title: '',
-    color: getNextColor(all),
+    color: randomColor,
     todos: [],
     collapsed: false,
     x: undefined,
