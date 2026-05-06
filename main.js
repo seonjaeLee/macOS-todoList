@@ -549,11 +549,7 @@ ipcMain.handle('delete-widget-by-id', (_event, widgetId) => {
 
 // ───────────────────────────── 앱 시작 ─────────────────────────────
 app.whenReady().then(() => {
-  if (app.dock) {
-    const dockIconPath = path.join(__dirname, 'todoList-icon.png')
-    if (fs.existsSync(dockIconPath)) app.dock.setIcon(dockIconPath)
-    app.dock.show()
-  }
+  if (app.dock) app.dock.show()
 
   setupTray()
 
