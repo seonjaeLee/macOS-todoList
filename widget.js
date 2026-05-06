@@ -103,17 +103,29 @@ function renderTitle(text) {
   }
 }
 
+function enterTitleEditMode() {
+  if ($title.contentEditable === 'true') return
+  $title.contentEditable = 'true'
+  if ($title.classList.contains('is-placeholder')) {
+    $title.textContent = ''
+    $title.classList.remove('is-placeholder')
+  }
+  $title.focus()
+}
+
 // ───────────────────────────── 타이틀 편집 (클릭 → 편집 모드) ─────────────────────────────
 $title.addEventListener('click', (e) => {
   e.stopPropagation()
-  if ($title.contentEditable !== 'true') {
-    $title.contentEditable = 'true'
-    if ($title.classList.contains('is-placeholder')) {
-      $title.textContent = ''
-      $title.classList.remove('is-placeholder')
-    }
-    $title.focus()
-  }
+  enterTitleEditMode()
+})
+
+window.api.onStartTitleEdit(() => {
+  enterTitleEditMode()
+})
+
+window.api.onExternalTitleUpdate((newTitle) => {
+  widgetData.title = (newTitle || '').trim()
+  renderTitle(widgetData.title)
 })
 
 $title.addEventListener('keydown', (e) => {

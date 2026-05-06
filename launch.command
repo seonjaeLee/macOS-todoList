@@ -4,4 +4,10 @@
 
 cd "$(dirname "$0")"
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-npx electron . > /tmp/desktop-todo.log 2>&1 &
+APP_NAME="todoList-myfunfun"
+
+if open -Ra "$APP_NAME" >/dev/null 2>&1; then
+  open -a "$APP_NAME"
+else
+  npx electron . > /tmp/desktop-todo.log 2>&1 &
+fi

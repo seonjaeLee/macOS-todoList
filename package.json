@@ -24,6 +24,9 @@
       "widget.html",
       "widget.css",
       "widget.js",
+      "memo-list.html",
+      "memo-list.css",
+      "memo-list.js",
       "guide.html",
       "todoList-icon.png"
     ]

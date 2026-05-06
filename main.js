@@ -137,6 +137,7 @@ function createTrayIconPNG() {
 // ───────────────────────────── 위젯 상태 ─────────────────────────────
 const widgetStates = new Map()
 let tray = null
+let listWin = null
 
 const COLORS = ['#FFF176', '#FFD54F', '#80DEEA', '#EF9A9A', '#CE93D8', '#A5D6A7']
 const WIDGET_W = 260
@@ -207,11 +208,16 @@ function createWidget(data) {
 
   win.on('moved',   () => saveWindowBounds(data.id, win))
   win.on('resized', () => saveWindowBounds(data.id, win))
-  win.on('closed',  () => { widgetStates.delete(data.id); updateTrayMenu() })
+  win.on('closed',  () => {
+    widgetStates.delete(data.id)
+    updateTrayMenu()
+    notifyWidgetListUpdated()
+  })
   win.on('focus',   () => win.moveTop())
 
   widgetStates.set(data.id, { win, data })
   updateTrayMenu()
+  notifyWidgetListUpdated()
   return win
 }
 
@@ -240,12 +246,14 @@ function showAllWidgets() {
   widgetStates.forEach(({ win, data }) => { if (!win.isDestroyed()) { win.show(); data.hidden = false } })
   persistAll()
   updateTrayMenu()
+  notifyWidgetListUpdated()
 }
 
 function hideAllWidgets() {
   widgetStates.forEach(({ win, data }) => { if (!win.isDestroyed()) { win.hide(); data.hidden = true } })
   persistAll()
   updateTrayMenu()
+  notifyWidgetListUpdated()
 }
 
 // ───────────────────────────── 트레이 ─────────────────────────────
@@ -263,49 +271,12 @@ function updateTrayMenu() {
   if (!tray) return
 
   const isLoginItem = app.getLoginItemSettings().openAtLogin
-
-  // 메모 목록 항목 생성
-  const widgetItems = [...widgetStates.entries()].map(([id, state]) => {
-    const visible = !state.win.isDestroyed() && state.win.isVisible()
-    const title   = state.data.title || '(제목 없음)'
-    return {
-      label: (visible ? '● ' : '○ ') + title,
-      submenu: [
-        {
-          label: visible ? '닫기' : '열기',
-          click: () => {
-            if (visible) {
-              state.win.hide()
-              state.data.hidden = true
-            } else {
-              state.win.show(); state.win.focus()
-              state.data.hidden = false
-            }
-            persistAll()
-            updateTrayMenu()
-          },
-        },
-        { type: 'separator' },
-        {
-          label: '삭제',
-          click: () => {
-            if (!state.win.isDestroyed()) state.win.close()
-            widgetStates.delete(id)
-            persistAll()
-            updateTrayMenu()
-          },
-        },
-      ],
-    }
-  })
-
-  const hasAny     = widgetStates.size > 0
   const allVisible = areAllVisible()
 
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '새 메모 추가', click: () => addNewWidget() },
     { type: 'separator' },
-    ...(hasAny ? widgetItems : [{ label: '메모 없음', enabled: false }]),
+    { label: '메모 목록 열기', click: () => openMemoListWindow() },
     { type: 'separator' },
     {
       label: allVisible ? '모두 숨기기' : '모두 보이기',
@@ -323,6 +294,50 @@ function updateTrayMenu() {
     { type: 'separator' },
     { label: '종료', click: () => app.quit() },
   ]))
+}
+
+function getWidgetListPayload() {
+  return [...widgetStates.entries()]
+    .filter(([, state]) => !state.win.isDestroyed())
+    .map(([id, state]) => ({
+      id,
+      title: state.data.title || '',
+      visible: state.win.isVisible(),
+      color: state.data.color || '#FFF176',
+    }))
+}
+
+function notifyWidgetListUpdated() {
+  if (!listWin || listWin.isDestroyed()) return
+  listWin.webContents.send('widget-list-updated')
+}
+
+function openMemoListWindow() {
+  if (listWin && !listWin.isDestroyed()) {
+    listWin.show()
+    listWin.focus()
+    return
+  }
+  listWin = new BrowserWindow({
+    width: 440,
+    height: 660,
+    frame: false,
+    resizable: false,
+    minimizable: true,
+    maximizable: false,
+    skipTaskbar: true,
+    hasShadow: true,
+    show: false,
+    backgroundColor: '#f5f5f7',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  })
+  listWin.loadFile('memo-list.html')
+  listWin.once('ready-to-show', () => listWin.show())
+  listWin.on('closed', () => { listWin = null })
 }
 
 // ───────────────────────────── 사용 가이드 창 ─────────────────────────────
@@ -370,6 +385,7 @@ function addNewWidget() {
   }
   createWidget(newData)
   persistAll()
+  notifyWidgetListUpdated()
 }
 
 // setImmediate로 IPC 콜스택 밖에서 생성 → V8 assertion 크래시 방지
@@ -426,6 +442,7 @@ ipcMain.on('update-widget', (event, payload) => {
   }
   if ('title' in fields) updateTrayMenu()
   persistAll()
+  notifyWidgetListUpdated()
 })
 
 // X 버튼: 삭제 아님, 숨기기만
@@ -439,6 +456,7 @@ ipcMain.on('hide-widget', (event) => {
     persistAll()
   }
   updateTrayMenu()
+  notifyWidgetListUpdated()
 })
 
 // 창 배경색 변경 (색상 피커)
@@ -485,9 +503,57 @@ ipcMain.on('focus-widget', (event, widgetId) => {
   if (state && !state.win.isDestroyed()) state.win.moveTop()
 })
 
+ipcMain.handle('get-widget-list', () => {
+  return getWidgetListPayload()
+})
+
+ipcMain.handle('toggle-widget-visibility', (_event, widgetId) => {
+  const state = widgetStates.get(widgetId)
+  if (!state || state.win.isDestroyed()) return false
+  if (state.win.isVisible()) {
+    state.win.hide()
+    state.data.hidden = true
+  } else {
+    state.win.show()
+    state.win.focus()
+    state.data.hidden = false
+  }
+  persistAll()
+  updateTrayMenu()
+  notifyWidgetListUpdated()
+  return true
+})
+
+ipcMain.handle('rename-widget-title', (_event, payload) => {
+  const { id, title } = payload || {}
+  const state = widgetStates.get(id)
+  if (!state || state.win.isDestroyed()) return false
+  state.data.title = (title || '').trim()
+  state.win.webContents.send('external-title-update', state.data.title)
+  persistAll()
+  updateTrayMenu()
+  notifyWidgetListUpdated()
+  return true
+})
+
+ipcMain.handle('delete-widget-by-id', (_event, widgetId) => {
+  const state = widgetStates.get(widgetId)
+  if (!state) return false
+  if (!state.win.isDestroyed()) state.win.close()
+  widgetStates.delete(widgetId)
+  persistAll()
+  updateTrayMenu()
+  notifyWidgetListUpdated()
+  return true
+})
+
 // ───────────────────────────── 앱 시작 ─────────────────────────────
 app.whenReady().then(() => {
-  if (app.dock) app.dock.show()
+  if (app.dock) {
+    const dockIconPath = path.join(__dirname, 'todoList-icon.png')
+    if (fs.existsSync(dockIconPath)) app.dock.setIcon(dockIconPath)
+    app.dock.show()
+  }
 
   setupTray()
 
