@@ -63,11 +63,3 @@ npm run build
 - 로그인 시 자동 실행 설정
 
 ---
-
-## 아이콘 정책 (고정)
-
-- 앱 아이콘(실행/종료 시 Dock 아이콘)은 `build/icon.icns`를 기준으로 사용합니다.
-- 개발 실행(`npm start`)에서는 동일 디자인의 `build/icon.png`를 Dock 아이콘으로 강제 적용합니다.
-- 트레이 아이콘은 코드에서 템플릿 PNG를 생성해 사용하며, 별도 `todoList-icon.png` 파일은 사용하지 않습니다.
-
----

@@ -28,6 +28,12 @@
 4. 원격 태그 푸시
    - `git push origin v1.0.0`
 
+### 아이콘 정책 (현재 기준)
+
+- 앱 아이콘(실행/종료 시 Dock 아이콘)은 `build/icon.icns`를 기준으로 사용.
+- 개발 실행(`npm start`)에서는 동일 디자인의 `build/icon.png`를 Dock 아이콘으로 강제 적용.
+- 트레이 아이콘은 코드에서 템플릿 PNG를 생성해 사용하며, 별도 `todoList-icon.png` 파일은 사용하지 않음.
+
 ---
 
 ## 2026-04-15
