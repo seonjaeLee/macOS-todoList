@@ -74,4 +74,8 @@
 - `모두 숨기기` 첫 실행 시 일부 메모가 남는 문제를 수정:
   - 전역 상태(`allWidgetsHiddenMode`)를 추가하고
   - 창 로드 완료 타이밍(`did-finish-load`)에서도 숨김 상태를 강제 적용하도록 보강.
+- macOS 배포용 `dmg` 1차 릴리스를 준비/검증:
+  - `package.json`에 `build:dmg`, `build:release` 스크립트를 추가해 설치 파일 생성 경로를 표준화.
+  - `dist/todoList-myfunfun-1.0.0-arm64.dmg` 생성 확인 후 GitHub Releases 업로드 기준 파일을 확정.
+  - 배포 산출물 업로드 기준을 정리(`.dmg`만 업로드, `.blockmap`/`builder-*.yml`은 제외).
 
