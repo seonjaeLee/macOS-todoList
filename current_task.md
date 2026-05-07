@@ -10,3 +10,10 @@
 - 수정내용 확인 후 커밋푸시
 - 진행한 수정내용은 history.md에 기록할 것
 - readmd.md 는 사용자 설치 가이드 임
+
+# Git 운영 규칙 (개발/공개 분리)
+- 레포 주소가 달라도 각 폴더에 `.git`이 분리되어 있으면 병행 작업 가능
+- 개발용 커밋/푸시는 `todoList-myfunfun` 폴더에서만 수행
+- 공개용 커밋/푸시는 `todoList-myfunfun/public-user-repo` 폴더에서만 수행
+- 커밋 전 `pwd` → `git remote -v` → `git status` 순서로 대상 레포 확인
+- 공개 레포 반영은 사용자용 파일만 선별하여 진행
