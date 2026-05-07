@@ -258,7 +258,7 @@ function hideAllWidgets() {
 
 // ───────────────────────────── 트레이 ─────────────────────────────
 function setupTray() {
-  const buf = fs.readFileSync(path.join(__dirname, 'todoList-icon.png'))
+  const buf = createTrayIconPNG()
   const icon = nativeImage.createFromBuffer(buf, { scaleFactor: 2.0 })
   icon.setTemplateImage(true) // macOS 라이트/다크 모드 자동 대응
 
@@ -549,7 +549,14 @@ ipcMain.handle('delete-widget-by-id', (_event, widgetId) => {
 
 // ───────────────────────────── 앱 시작 ─────────────────────────────
 app.whenReady().then(() => {
-  if (app.dock) app.dock.show()
+  if (app.dock) {
+    app.dock.show()
+    if (!app.isPackaged) {
+      const devDockIconPath = path.join(__dirname, 'build', 'icon.png')
+      const devDockIcon = nativeImage.createFromPath(devDockIconPath)
+      if (!devDockIcon.isEmpty()) app.dock.setIcon(devDockIcon)
+    }
+  }
 
   setupTray()
 

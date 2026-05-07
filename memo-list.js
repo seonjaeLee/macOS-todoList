@@ -3,6 +3,26 @@ const $btnClose = document.getElementById('btn-close')
 
 $btnClose.addEventListener('click', () => window.close())
 
+function toHexChannel(value) {
+  return value.toString(16).padStart(2, '0')
+}
+
+function getSlightlyDarkerColor(hexColor, amount = 0.14) {
+  const raw = (hexColor || '').replace('#', '')
+  const normalized = raw.length === 3
+    ? raw.split('').map((ch) => ch + ch).join('')
+    : raw
+
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return 'rgba(0, 0, 0, 0.3)'
+
+  const r = parseInt(normalized.slice(0, 2), 16)
+  const g = parseInt(normalized.slice(2, 4), 16)
+  const b = parseInt(normalized.slice(4, 6), 16)
+
+  const darken = (channel) => Math.max(0, Math.round(channel * (1 - amount)))
+  return `#${toHexChannel(darken(r))}${toHexChannel(darken(g))}${toHexChannel(darken(b))}`
+}
+
 async function renderList() {
   const widgets = await window.api.getWidgetList()
   $list.innerHTML = ''
@@ -24,7 +44,9 @@ async function renderList() {
 
     const dot = document.createElement('span')
     dot.className = 'dot'
-    dot.style.backgroundColor = widget.visible ? (widget.color || '#FFF176') : 'transparent'
+    const bulletColor = widget.color || '#FFF176'
+    dot.style.backgroundColor = bulletColor
+    dot.style.borderColor = getSlightlyDarkerColor(bulletColor)
 
     const title = document.createElement('div')
     title.className = 'item-title'
@@ -67,17 +89,11 @@ async function renderList() {
     const actions = document.createElement('div')
     actions.className = 'item-actions'
 
-    const btnToggle = document.createElement('button')
-    btnToggle.className = 'btn'
-    btnToggle.textContent = widget.visible ? '닫기' : '열기'
-    btnToggle.addEventListener('click', async () => {
-      await window.api.toggleWidgetVisibility(widget.id)
-      await renderList()
-    })
-
     const btnDelete = document.createElement('button')
-    btnDelete.className = 'btn btn-delete'
-    btnDelete.textContent = '삭제'
+    btnDelete.className = 'btn-icon-delete'
+    btnDelete.innerHTML = '&times;'
+    btnDelete.title = '삭제'
+    btnDelete.setAttribute('aria-label', '삭제')
     btnDelete.addEventListener('click', async () => {
       const ok = window.confirm('이 메모를 삭제할까요?')
       if (!ok) return
@@ -85,7 +101,6 @@ async function renderList() {
       await renderList()
     })
 
-    actions.appendChild(btnToggle)
     actions.appendChild(btnDelete)
 
     item.appendChild(main)

@@ -102,24 +102,6 @@ body {
   overflow: hidden;
 }
 
-.section-title {
-  background: #e8e8ed;
-  padding: 7px 14px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #6e6e73;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  user-select: none;
-}
-
-.s-icon {
-  font-size: 13px;
-}
-
 .list {
   display: flex;
   flex-direction: column;
@@ -156,8 +138,8 @@ body {
 .dot {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+  border: 0.75px solid rgba(0, 0, 0, 0.3);
   flex-shrink: 0;
 }
 
@@ -180,34 +162,27 @@ body {
 
 .item-actions {
   display: flex;
-  gap: 6px;
+  justify-content: flex-end;
 }
 
-.btn {
-  border: 1px solid #d1d1d6;
-  background: #f2f2f7;
-  color: #3a3a3c;
-  border-radius: 7px;
-  font-size: 12px;
-  height: 26px;
-  padding: 0 10px;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.btn:hover {
-  background: #e8e8ed;
-  border-color: #c7c7cc;
-}
-
-.btn-delete {
-  border-color: rgba(255, 59, 48, 0.35);
+.btn-icon-delete {
+  border: 1px solid rgba(255, 59, 48, 0.35);
+  background: rgba(255, 59, 48, 0.04);
   color: #ff3b30;
+  border-radius: 7px;
+  font-size: 13px;
+  width: 30px;
+  height: 26px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.btn-delete:hover {
-  background: rgba(255, 59, 48, 0.08);
-  border-color: rgba(255, 59, 48, 0.45);
+.btn-icon-delete:hover {
+  background: rgba(255, 59, 48, 0.1);
+  border-color: rgba(255, 59, 48, 0.48);
 }
 
 .footer {
