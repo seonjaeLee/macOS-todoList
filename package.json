@@ -27,7 +27,9 @@
       "memo-list.html",
       "memo-list.css",
       "memo-list.js",
-      "guide.html"
+      "guide.html",
+      "Delete_icon.png",
+      "status_icon.png"
     ]
   },
   "keywords": [],

@@ -91,7 +91,7 @@ async function renderList() {
 
     const btnDelete = document.createElement('button')
     btnDelete.className = 'btn-icon-delete'
-    btnDelete.innerHTML = '&times;'
+    btnDelete.innerHTML = '<img src="Delete_icon.png" alt="" />'
     btnDelete.title = '삭제'
     btnDelete.setAttribute('aria-label', '삭제')
     btnDelete.addEventListener('click', async () => {

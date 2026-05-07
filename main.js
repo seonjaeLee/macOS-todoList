@@ -138,6 +138,7 @@ function createTrayIconPNG() {
 const widgetStates = new Map()
 let tray = null
 let listWin = null
+let allWidgetsHiddenMode = false
 
 const COLORS = ['#FFF176', '#FFD54F', '#80DEEA', '#EF9A9A', '#CE93D8', '#A5D6A7']
 const WIDGET_W = 260
@@ -203,7 +204,15 @@ function createWidget(data) {
 
   win.webContents.once('did-finish-load', () => {
     win.webContents.send('init-widget', data)
-    if (!data.hidden) { win.show(); updateTrayMenu() }
+    // 로딩 타이밍과 무관하게 "모두 숨기기" 상태를 우선 적용한다.
+    if (!data.hidden && !allWidgetsHiddenMode) {
+      win.show()
+      updateTrayMenu()
+      return
+    }
+    data.hidden = true
+    win.hide()
+    updateTrayMenu()
   })
 
   win.on('moved',   () => saveWindowBounds(data.id, win))
@@ -243,6 +252,7 @@ function areAllVisible() {
 }
 
 function showAllWidgets() {
+  allWidgetsHiddenMode = false
   widgetStates.forEach(({ win, data }) => { if (!win.isDestroyed()) { win.show(); data.hidden = false } })
   persistAll()
   updateTrayMenu()
@@ -250,6 +260,7 @@ function showAllWidgets() {
 }
 
 function hideAllWidgets() {
+  allWidgetsHiddenMode = true
   widgetStates.forEach(({ win, data }) => { if (!win.isDestroyed()) { win.hide(); data.hidden = true } })
   persistAll()
   updateTrayMenu()
@@ -258,9 +269,17 @@ function hideAllWidgets() {
 
 // ───────────────────────────── 트레이 ─────────────────────────────
 function setupTray() {
-  const buf = createTrayIconPNG()
-  const icon = nativeImage.createFromBuffer(buf, { scaleFactor: 2.0 })
-  icon.setTemplateImage(true) // macOS 라이트/다크 모드 자동 대응
+  const trayIconPath = path.join(__dirname, 'status_icon.png')
+  let icon = nativeImage.createFromPath(trayIconPath)
+  if (icon.isEmpty()) {
+    const buf = createTrayIconPNG()
+    icon = nativeImage.createFromBuffer(buf, { scaleFactor: 2.0 })
+  } else {
+    // 메뉴바 기준 논리 크기(16x16)로 맞추고, 소스가 @2x여도 동일 기준으로 렌더링한다.
+    icon = icon.resize({ width: 16, height: 16, quality: 'best' })
+  }
+  // 메뉴바 아이콘은 템플릿 처리해야 시스템 톤(라이트/다크)에 맞춰 표시된다.
+  icon.setTemplateImage(true)
 
   tray = new Tray(icon)
   tray.setToolTip('Desktop Todo')
@@ -276,7 +295,7 @@ function updateTrayMenu() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '새 메모 추가', click: () => addNewWidget() },
     { type: 'separator' },
-    { label: '메모 목록 열기', click: () => openMemoListWindow() },
+    { label: '메모 목록', click: () => openMemoListWindow() },
     { type: 'separator' },
     {
       label: allVisible ? '모두 숨기기' : '모두 보이기',

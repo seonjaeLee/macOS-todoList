@@ -166,23 +166,37 @@ body {
 }
 
 .btn-icon-delete {
-  border: 1px solid rgba(255, 59, 48, 0.35);
-  background: rgba(255, 59, 48, 0.04);
-  color: #ff3b30;
-  border-radius: 7px;
-  font-size: 13px;
+  border: none;
+  background: transparent;
   width: 30px;
-  height: 26px;
+  height: 30px;
+  border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background 0.15s;
+}
+
+.btn-icon-delete svg {
+  display: none;
+}
+
+.btn-icon-delete img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  pointer-events: none;
+  filter: brightness(1.15);
+  transition: filter 0.15s;
 }
 
 .btn-icon-delete:hover {
-  background: rgba(255, 59, 48, 0.1);
-  border-color: rgba(255, 59, 48, 0.48);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon-delete:hover img {
+  filter: brightness(0.72);
 }
 
 .footer {
