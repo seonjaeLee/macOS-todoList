@@ -5,3 +5,5 @@ build/
 .DS_Store
 .claude/
 public-user-repo/
+public-user-repo-clean/
+release-assets/
