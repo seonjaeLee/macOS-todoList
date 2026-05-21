@@ -1,0 +1,3 @@
+[submodule "public-release-work"]
+	path = public-release-work
+	url = https://github.com/seonjaeLee/macOS-todoList-myfunfun.git
