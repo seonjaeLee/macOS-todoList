@@ -36,6 +36,12 @@
 
 ---
 
+## 2026-05-21
+
+- 공개 배포 문서 정리: README·릴리스 노트·GitHub Release 본문을 동일한 ⚠️ 3줄 불릿 형식으로 통일.
+- `public-release-work/WORKFLOW.md` 추가, `docs/setup.md`·`current_task.md`의 폴더명을 `public-release-work`로 통일.
+- `.gitmodules` 등록으로 공개 레포 서브모듈 경로를 명시 (VS Code Git 혼동 완화).
+
 ## 2026-04-15
 
 - 초기 macOS todoList 위젯 앱 베이스를 구성.
