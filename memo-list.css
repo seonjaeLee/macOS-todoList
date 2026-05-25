@@ -209,7 +209,41 @@ body {
   border-top: 1px solid #e5e5ea;
 }
 
-/* ── 항상 위에 띄우기 (풍선) 목록 버튼 ── */
+/* macOS Electron(frameless): HTML title 대신 CSS 툴팁 */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.82);
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease, visibility 0.12s ease;
+  transition-delay: 0s;
+  z-index: 200;
+  font-family: Pretendard, -apple-system, 'Helvetica Neue', sans-serif;
+}
+
+[data-tooltip]:hover::before,
+[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.4s;
+}
+
+/* ── 항상 위에 띄우기 (열기구) 목록 버튼 ── */
 .btn-icon-float {
   border: none;
   background: transparent;

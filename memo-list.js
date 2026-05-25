@@ -91,7 +91,7 @@ async function renderList() {
 
     const btnFloat = document.createElement('button')
     btnFloat.className = 'btn-icon-float' + (widget.alwaysOnTop ? ' active' : '')
-    btnFloat.title = '항상 위에 띄우기'
+    btnFloat.setAttribute('data-tooltip', '항상 위에 띄우기')
     btnFloat.setAttribute('aria-label', '항상 위에 띄우기')
     btnFloat.innerHTML = `
       <svg viewBox="0 0 24 24">

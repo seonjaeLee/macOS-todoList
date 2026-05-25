@@ -41,10 +41,12 @@ body {
   padding: 0 10px;
   height: 44px;
   background: rgba(0,0,0,0.08);
+  overflow: visible;
   -webkit-app-region: drag;
   cursor: grab;
   flex-shrink: 0;
   border-radius: 0;
+  z-index: 1;
 }
 
 .titlebar:active {
@@ -109,7 +111,50 @@ body {
   gap: 6px;
   margin-left: 8px;
   flex-shrink: 0;
+  overflow: visible;
   -webkit-app-region: no-drag;
+}
+
+/* macOS Electron(frameless)에서는 HTML title 툴팁이 안 뜨는 경우가 많아 CSS로 표시 */
+[data-tooltip] {
+  position: relative;
+}
+
+/* ::before 사용 — .btn-palette는 ::after로 가운데 원을 그림 */
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.82);
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease, visibility 0.12s ease;
+  transition-delay: 0s;
+  z-index: 200;
+  font-family: Pretendard, -apple-system, 'Helvetica Neue', sans-serif;
+}
+
+[data-tooltip]:hover::before,
+[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.4s;
+}
+
+.titlebar-actions [data-tooltip]:last-child::before,
+.titlebar-actions [data-tooltip]:nth-last-child(2)::before {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
 /* ── 팔레트 버튼 ── */
@@ -182,7 +227,7 @@ body {
   color: rgba(0,0,0,0.85);
 }
 
-/* ── 항상 위에 띄우기 (풍선) 버튼 ── */
+/* ── 항상 위에 띄우기 (열기구) 버튼 ── */
 .btn-float {
   width: 22px;
   height: 22px;
@@ -216,7 +261,7 @@ body {
 }
 
 .btn-float.active {
-  transform: translateY(-2px); /* 활성화 시 둥둥 뜬 채 고정 */
+  transform: translateY(-2px); /* 활성화 시 둥둥 뜬 채 유지 */
 }
 
 .btn-float.active .svg-float {

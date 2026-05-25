@@ -118,6 +118,30 @@
       color: #1d1d1f;
     }
 
+    /* 가이드용 UI 아이콘 칩 (메모 타이틀바 버튼과 동일 SVG) */
+    .ui-icon-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+      width: 22px;
+      height: 22px;
+      margin: 0 3px;
+      background: #e8e8ed;
+      border-radius: 4px;
+      position: relative;
+      top: -1px;
+    }
+    .ui-icon-chip svg {
+      width: 14px;
+      height: 14px;
+      stroke: #1d1d1f;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     .footer {
       text-align: center;
       color: #aeaeb2;
@@ -147,20 +171,20 @@
       </div>
       <div class="item">
         <div class="item-body">
-          <div class="item-title">메모 목록 열기</div>
-          <div class="item-desc">메뉴바 아이콘 → <kbd>메모 목록 열기</kbd>에서 전체 메모를 한 번에 관리</div>
+          <div class="item-title">메모 목록</div>
+          <div class="item-desc">메뉴바 아이콘 → <kbd>메모 목록</kbd>에서 전체 메모를 한 번에 관리<br>제목 더블클릭으로 수정, 휴지통 아이콘으로 삭제</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-body">
+          <div class="item-title">모두 숨기기 / 모두 보이기</div>
+          <div class="item-desc">메뉴바 아이콘 → <kbd>모두 숨기기</kbd> 또는 <kbd>모두 보이기</kbd>로 열린 메모를 한꺼번에 숨기거나 다시 표시</div>
         </div>
       </div>
       <div class="item">
         <div class="item-body">
           <div class="item-title">메모 닫기</div>
-          <div class="item-desc">각 메모 타이틀바 오른쪽의 <kbd>✕</kbd> 버튼으로 창을 닫을 수 있습니다</div>
-        </div>
-      </div>
-      <div class="item">
-        <div class="item-body">
-          <div class="item-title">메모 제목 수정 / 삭제</div>
-          <div class="item-desc">메모 목록 창에서 제목을 더블클릭해 수정, <kbd>✕</kbd> 아이콘 버튼으로 제거</div>
+          <div class="item-desc">각 메모 타이틀바 오른쪽 <kbd>✕</kbd>는 삭제가 아니라 <strong>닫기(숨기기)</strong>입니다<br>다시 보려면 메뉴바에서 <kbd>모두 보이기</kbd>를 사용하세요</div>
         </div>
       </div>
     </div>
@@ -233,6 +257,18 @@
         <div class="item-body">
           <div class="item-title">이동</div>
           <div class="item-desc">타이틀바를 드래그해서 원하는 위치로 이동</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-body">
+          <div class="item-title">항상 위에 띄우기</div>
+          <div class="item-desc">타이틀바의 <span class="ui-icon-chip" title="항상 위에 띄우기" aria-label="열기구"><svg viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 1 8 8c0 3.2-2.5 5.6-4.5 7h-7C6.5 15.6 4 13.2 4 10a8 8 0 0 1 8-8z"/><path d="M12 2c2 2.5 2 11 0 15"/><path d="M12 2c-2 2.5-2 11 0 15"/><path d="M9 17l0.5 3"/><path d="M15 17l-0.5 3"/><rect x="9.5" y="20" width="5" height="3" rx="0.5"/></svg></span> 열기구 아이콘을 누르면 해당 메모가 다른 창·앱 위에 떠 있습니다<br>드래그·크기 조절은 그대로 가능 · 다시 누르면 해제 · 재시작 후에도 유지</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-body">
+          <div class="item-title">메모 목록에서 항상 위에 띄우기</div>
+          <div class="item-desc">메뉴바 → <kbd>메모 목록</kbd>을 연 뒤, 각 메모 오른쪽의 <span class="ui-icon-chip" title="항상 위에 띄우기" aria-label="열기구"><svg viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 1 8 8c0 3.2-2.5 5.6-4.5 7h-7C6.5 15.6 4 13.2 4 10a8 8 0 0 1 8-8z"/><path d="M12 2c2 2.5 2 11 0 15"/><path d="M12 2c-2 2.5-2 11 0 15"/><path d="M9 17l0.5 3"/><path d="M15 17l-0.5 3"/><rect x="9.5" y="20" width="5" height="3" rx="0.5"/></svg></span> 열기구로 켜고 끌 수 있습니다<br>띄워 둔 중이면 아이콘이 파란색으로 표시되며, 메모 창과 실시간으로 맞춰집니다</div>
         </div>
       </div>
     </div>
