@@ -200,6 +200,9 @@ function createWidget(data) {
   })
 
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: false })
+  if (data.alwaysOnTop) {
+    win.setAlwaysOnTop(true, 'floating')
+  }
   win.loadFile('widget.html')
 
   win.webContents.once('did-finish-load', () => {
@@ -323,6 +326,7 @@ function getWidgetListPayload() {
       title: state.data.title || '',
       visible: state.win.isVisible(),
       color: state.data.color || '#FFF176',
+      alwaysOnTop: !!state.data.alwaysOnTop,
     }))
 }
 
@@ -447,6 +451,10 @@ ipcMain.on('update-widget', (event, payload) => {
   if (!state || state.win.isDestroyed()) return
   const { id, ...fields } = payload
   Object.assign(state.data, fields)
+  if ('alwaysOnTop' in fields) {
+    state.win.setAlwaysOnTop(fields.alwaysOnTop, 'floating')
+    state.win.webContents.send('external-always-on-top-update', fields.alwaysOnTop)
+  }
   if ('collapsed' in fields) {
     const { x, y, width, height } = state.win.getBounds()
     if (fields.collapsed) {

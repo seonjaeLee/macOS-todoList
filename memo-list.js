@@ -89,6 +89,26 @@ async function renderList() {
     const actions = document.createElement('div')
     actions.className = 'item-actions'
 
+    const btnFloat = document.createElement('button')
+    btnFloat.className = 'btn-icon-float' + (widget.alwaysOnTop ? ' active' : '')
+    btnFloat.title = '항상 위에 띄우기'
+    btnFloat.setAttribute('aria-label', '항상 위에 띄우기')
+    btnFloat.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2a8 8 0 0 1 8 8c0 3.2-2.5 5.6-4.5 7h-7C6.5 15.6 4 13.2 4 10a8 8 0 0 1 8-8z" class="balloon-body" />
+        <path d="M12 2c2 2.5 2 11 0 15" />
+        <path d="M12 2c-2 2.5-2 11 0 15" />
+        <path d="M9 17l0.5 3" />
+        <path d="M15 17l-0.5 3" />
+        <rect x="9.5" y="20" width="5" height="3" rx="0.5" class="balloon-basket" />
+      </svg>
+    `
+    btnFloat.addEventListener('click', async () => {
+      const nextVal = !widget.alwaysOnTop
+      await window.api.updateWidget({ id: widget.id, alwaysOnTop: nextVal })
+      await renderList()
+    })
+
     const btnDelete = document.createElement('button')
     btnDelete.className = 'btn-icon-delete'
     btnDelete.innerHTML = '<img src="Delete_icon.png" alt="" />'
@@ -101,6 +121,7 @@ async function renderList() {
       await renderList()
     })
 
+    actions.appendChild(btnFloat)
     actions.appendChild(btnDelete)
 
     item.appendChild(main)

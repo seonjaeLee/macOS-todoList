@@ -20,6 +20,7 @@ const $btnAddWidget      = document.getElementById('btn-add-widget')
 const $btnClose          = document.getElementById('btn-close')
 const $btnClear          = document.getElementById('btn-clear')
 const $btnPalette  = document.getElementById('btn-palette')
+const $btnFloat    = document.getElementById('btn-float')
 const $colorInput  = document.getElementById('color-input')
 const $memoDesc    = document.getElementById('memo-desc')
 
@@ -36,6 +37,10 @@ window.api.onInitWidget((data) => {
 
   if (data.collapsed) {
     $widget.classList.add('collapsed')
+  }
+
+  if (data.alwaysOnTop) {
+    $btnFloat.classList.add('active')
   }
 
   data.todos.forEach((todo) => appendTodoItem(todo))
@@ -126,6 +131,20 @@ window.api.onStartTitleEdit(() => {
 window.api.onExternalTitleUpdate((newTitle) => {
   widgetData.title = (newTitle || '').trim()
   renderTitle(widgetData.title)
+})
+
+window.api.onExternalAlwaysOnTopUpdate((value) => {
+  if (widgetData) {
+    widgetData.alwaysOnTop = value
+    $btnFloat.classList.toggle('active', value)
+  }
+})
+
+$btnFloat.addEventListener('click', () => {
+  if (!widgetData) return
+  const isActive = $btnFloat.classList.toggle('active')
+  widgetData.alwaysOnTop = isActive
+  sync({ alwaysOnTop: isActive })
 })
 
 $title.addEventListener('keydown', (e) => {

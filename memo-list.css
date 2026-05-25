@@ -208,3 +208,43 @@ body {
   background: #f5f5f7;
   border-top: 1px solid #e5e5ea;
 }
+
+/* ── 항상 위에 띄우기 (풍선) 목록 버튼 ── */
+.btn-icon-float {
+  border: none;
+  background: transparent;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+  color: #aeaeb2;
+}
+
+.btn-icon-float:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1d1d1f;
+  transform: translateY(-2px);
+}
+
+.btn-icon-float.active {
+  color: #007aff; /* macOS 테마 블루 강조 */
+  transform: translateY(-2px);
+}
+
+.btn-icon-float.active svg {
+  fill: currentColor;
+}
+
+.btn-icon-float svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

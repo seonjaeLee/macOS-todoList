@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('api', {
   onInitWidget: (cb) => ipcRenderer.on('init-widget', (_e, data) => cb(data)),
   onStartTitleEdit: (cb) => ipcRenderer.on('start-title-edit', () => cb()),
   onExternalTitleUpdate: (cb) => ipcRenderer.on('external-title-update', (_e, title) => cb(title)),
+  onExternalAlwaysOnTopUpdate: (cb) => ipcRenderer.on('external-always-on-top-update', (_e, value) => cb(value)),
   onWidgetListUpdated: (cb) => ipcRenderer.on('widget-list-updated', () => cb()),
 
   // 렌더러 → 메인

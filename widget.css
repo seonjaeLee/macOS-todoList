@@ -182,6 +182,48 @@ body {
   color: rgba(0,0,0,0.85);
 }
 
+/* ── 항상 위에 띄우기 (풍선) 버튼 ── */
+.btn-float {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: rgba(0,0,0,0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, transform 0.2s, background 0.15s;
+  padding: 0;
+}
+
+.btn-float:hover {
+  color: rgba(0,0,0,0.85);
+  transform: translateY(-2px); /* 호버 시 가볍게 위로 둥실 떠오름 */
+  background: rgba(0,0,0,0.05);
+}
+
+.svg-float {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: fill 0.2s, stroke 0.2s, transform 0.2s;
+}
+
+.btn-float.active {
+  transform: translateY(-2px); /* 활성화 시 둥둥 뜬 채 고정 */
+}
+
+.btn-float.active .svg-float {
+  fill: rgba(0,0,0,0.7);
+  stroke: rgba(0,0,0,0.7);
+}
+
 .btn-close {
   width: 22px;
   height: 22px;
@@ -423,6 +465,7 @@ body {
 body.low-light .btn-collapse,
 body.low-light .title,
 body.low-light .btn-add-widget,
+body.low-light .btn-float,
 body.low-light .btn-close,
 body.low-light .memo-desc,
 body.low-light .new-todo,
@@ -431,6 +474,11 @@ body.low-light .todo-label,
 body.low-light .btn-remove-item,
 body.low-light .btn-clear {
   color: rgba(255,255,255,0.92) !important;
+}
+
+body.low-light .btn-float.active .svg-float {
+  fill: rgba(255,255,255,0.92) !important;
+  stroke: rgba(255,255,255,0.92) !important;
 }
 
 body.low-light .title.is-placeholder,
