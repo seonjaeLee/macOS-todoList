@@ -22,4 +22,6 @@ contextBridge.exposeInMainWorld('api', {
   toggleWidgetVisibility: (id) => ipcRenderer.invoke('toggle-widget-visibility', id),
   renameWidgetTitle: (id, title) => ipcRenderer.invoke('rename-widget-title', { id, title }),
   deleteWidgetById: (id) => ipcRenderer.invoke('delete-widget-by-id', id),
+  showTooltip: (payload) => ipcRenderer.send('show-tooltip', payload),
+  hideTooltip: () => ipcRenderer.send('hide-tooltip'),
 })

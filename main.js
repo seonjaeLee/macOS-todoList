@@ -145,6 +145,223 @@ const WIDGET_W = 260
 const WIDGET_H_EXPANDED = 340
 const WIDGET_H_COLLAPSED = 44
 
+// ───────────────────────────── macOS 스타일 공유 툴팁 창 (메모 창 밖에 표시) ─────────────────────────────
+let tooltipWin = null
+let tooltipOwnerWin = null
+let tooltipReadyPromise = null
+
+const TOOLTIP_MEASURE_W = 640
+const TOOLTIP_MEASURE_H = 120
+
+function ensureTooltipWindow() {
+  if (tooltipWin && !tooltipWin.isDestroyed()) return tooltipWin
+
+  tooltipWin = new BrowserWindow({
+    width: TOOLTIP_MEASURE_W,
+    height: TOOLTIP_MEASURE_H,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    focusable: false,
+    hasShadow: false,
+    resizable: false,
+    movable: false,
+    show: false,
+    type: process.platform === 'darwin' ? 'panel' : 'tooltip',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+    },
+  })
+
+  tooltipWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: false })
+  tooltipReadyPromise = new Promise((resolve, reject) => {
+    tooltipWin.webContents.once('did-finish-load', resolve)
+    tooltipWin.webContents.once('did-fail-load', (_e, code, desc) => {
+      reject(new Error(`tooltip load failed: ${code} ${desc}`))
+    })
+  })
+  tooltipWin.loadFile(path.join(__dirname, 'tooltip.html'))
+  return tooltipWin
+}
+
+async function ensureTooltipPageReady() {
+  const tip = ensureTooltipWindow()
+  if (tooltipReadyPromise) {
+    await tooltipReadyPromise
+    tooltipReadyPromise = null
+  } else if (tip.webContents.isLoading()) {
+    await new Promise((resolve) => tip.webContents.once('did-finish-load', resolve))
+  }
+  const ok = await tip.webContents.executeJavaScript('!!document.getElementById("tip-svg")')
+  if (!ok) throw new Error('tooltip page DOM not ready')
+  return tip
+}
+
+function hideTooltipWindow() {
+  if (tooltipWin && !tooltipWin.isDestroyed()) tooltipWin.hide()
+  tooltipOwnerWin = null
+}
+
+function clamp(n, min, max) {
+  return Math.min(Math.max(n, min), max)
+}
+
+async function layoutTooltipContent(text, preferBelow) {
+  const tip = await ensureTooltipPageReady()
+  const pointUp = !!preferBelow
+
+  tip.setBounds({
+    x: -32000,
+    y: -32000,
+    width: TOOLTIP_MEASURE_W,
+    height: TOOLTIP_MEASURE_H,
+  })
+
+  return tip.webContents.executeJavaScript(`
+    (() => {
+      const svg = document.getElementById('tip-svg');
+      const shape = document.getElementById('tip-shape');
+      const label = document.getElementById('tip-text');
+      if (!svg || !shape || !label) return { width: 0, height: 0 };
+
+      const PAD_X = 8;
+      const PAD_Y = 4;
+      const R = 5;
+      const ARROW_W = 10;
+      const ARROW_H = 5;
+      const MARGIN = 10;
+      const arrowAtTop = ${pointUp};
+
+      label.textContent = ${JSON.stringify(text)};
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('dominant-baseline', 'middle');
+
+      const bbox = label.getBBox();
+      const bodyW = Math.max(28, Math.ceil(bbox.width) + PAD_X * 2);
+      const bodyH = Math.max(18, Math.ceil(bbox.height) + PAD_Y * 2);
+      const tipW = bodyW;
+      const tipH = bodyH + ARROW_H;
+      const svgW = tipW + MARGIN * 2;
+      const svgH = tipH + MARGIN * 2;
+      const x0 = MARGIN;
+      const y0 = MARGIN;
+      const cx = x0 + tipW / 2;
+
+      let d;
+      if (arrowAtTop) {
+        const top = y0 + ARROW_H;
+        const bottom = top + bodyH;
+        d = [
+          'M', cx, y0,
+          'L', cx + ARROW_W / 2, top,
+          'H', x0 + tipW - R,
+          'Q', x0 + tipW, top, x0 + tipW, top + R,
+          'V', bottom - R,
+          'Q', x0 + tipW, bottom, x0 + tipW - R, bottom,
+          'H', x0 + R,
+          'Q', x0, bottom, x0, bottom - R,
+          'V', top + R,
+          'Q', x0, top, x0 + R, top,
+          'H', cx - ARROW_W / 2,
+          'Z',
+        ].join(' ');
+        label.setAttribute('x', String(cx));
+        label.setAttribute('y', String(top + bodyH / 2));
+      } else {
+        const bottom = y0 + bodyH;
+        d = [
+          'M', x0 + R, y0,
+          'H', x0 + tipW - R,
+          'Q', x0 + tipW, y0, x0 + tipW, y0 + R,
+          'V', bottom - R,
+          'Q', x0 + tipW, bottom, x0 + tipW - R, bottom,
+          'H', cx + ARROW_W / 2,
+          'L', cx, bottom + ARROW_H,
+          'L', cx - ARROW_W / 2, bottom,
+          'H', x0 + R,
+          'Q', x0, bottom, x0, bottom - R,
+          'V', y0 + R,
+          'Q', x0, y0, x0 + R, y0,
+          'Z',
+        ].join(' ');
+        label.setAttribute('x', String(cx));
+        label.setAttribute('y', String(y0 + bodyH / 2));
+      }
+
+      shape.setAttribute('d', d);
+      svg.setAttribute('width', String(svgW));
+      svg.setAttribute('height', String(svgH));
+      svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+      return { width: svgW, height: svgH };
+    })()
+  `)
+}
+
+async function showTooltipWindow(ownerWin, payload) {
+  const { anchorLeft, anchorTop, anchorWidth, anchorHeight, text, preferBelow } = payload
+  if (!ownerWin || ownerWin.isDestroyed() || !text) return
+  if (typeof anchorLeft !== 'number' || typeof anchorTop !== 'number') return
+
+  const tip = await ensureTooltipPageReady()
+  tooltipOwnerWin = ownerWin
+
+  const ownerBounds = ownerWin.getBounds()
+  const anchorScreenX = ownerBounds.x + anchorLeft
+  const anchorScreenY = ownerBounds.y + anchorTop
+
+  let placeBelow = !!preferBelow
+  let size = await layoutTooltipContent(text, placeBelow)
+  if (!size.width || !size.height) {
+    console.error('tooltip layout size invalid', { size, text })
+    return
+  }
+
+  const anchorCenterX = anchorScreenX + anchorWidth / 2
+  const anchorBottom = anchorScreenY + anchorHeight
+  const gap = 6
+
+  const display = screen.getDisplayNearestPoint({ x: anchorCenterX, y: anchorScreenY })
+  const area = display.workArea
+
+  let x = anchorCenterX - size.width / 2
+  let y = placeBelow ? anchorBottom + gap : anchorScreenY - size.height - gap
+
+  if (placeBelow && y + size.height > area.y + area.height - 4) {
+    placeBelow = false
+    size = await layoutTooltipContent(text, placeBelow)
+    y = anchorScreenY - size.height - gap
+  } else if (!placeBelow && y < area.y + 4) {
+    placeBelow = true
+    size = await layoutTooltipContent(text, placeBelow)
+    y = anchorBottom + gap
+  }
+
+  x = clamp(x, area.x + 4, area.x + area.width - size.width - 4)
+  y = clamp(y, area.y + 4, area.y + area.height - size.height - 4)
+
+  tip.setBounds({
+    x: Math.round(x),
+    y: Math.round(y),
+    width: size.width,
+    height: size.height,
+  })
+  if (process.platform === 'darwin') tip.setAlwaysOnTop(true, 'floating')
+  tip.showInactive()
+}
+
+function bindTooltipOwnerCleanup(win) {
+  const clearIfOwner = () => {
+    if (tooltipOwnerWin === win) hideTooltipWindow()
+  }
+  win.on('hide', clearIfOwner)
+  win.on('closed', clearIfOwner)
+}
+
 function hslToHex(h, s, l) {
   const saturation = s / 100
   const lightness = l / 100
@@ -205,6 +422,15 @@ function createWidget(data) {
   }
   win.loadFile('widget.html')
 
+  if (!app.isPackaged) {
+    win.webContents.on('before-input-event', (event, input) => {
+      if (input.type === 'keyDown' && input.meta && input.key?.toLowerCase() === 'r') {
+        event.preventDefault()
+        win.reload()
+      }
+    })
+  }
+
   win.webContents.once('did-finish-load', () => {
     win.webContents.send('init-widget', data)
     // 로딩 타이밍과 무관하게 "모두 숨기기" 상태를 우선 적용한다.
@@ -228,6 +454,7 @@ function createWidget(data) {
   win.on('focus',   () => win.moveTop())
 
   widgetStates.set(data.id, { win, data })
+  bindTooltipOwnerCleanup(win)
   updateTrayMenu()
   notifyWidgetListUpdated()
   return win
@@ -289,6 +516,39 @@ function setupTray() {
   updateTrayMenu()
 }
 
+function setupApplicationMenu() {
+  if (process.platform !== 'darwin') return
+
+  const template = [
+    {
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    },
+    {
+      label: '메모',
+      submenu: [
+        {
+          label: '새 메모 추가',
+          accelerator: 'CmdOrCtrl+N',
+          click: () => setImmediate(() => addNewWidget()),
+        },
+        { type: 'separator' },
+        { label: '메모 목록', click: () => openMemoListWindow() },
+      ],
+    },
+  ]
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
 function updateTrayMenu() {
   if (!tray) return
 
@@ -296,7 +556,7 @@ function updateTrayMenu() {
   const allVisible = areAllVisible()
 
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: '새 메모 추가', click: () => addNewWidget() },
+    { label: '새 메모 추가', accelerator: 'CmdOrCtrl+N', click: () => addNewWidget() },
     { type: 'separator' },
     { label: '메모 목록', click: () => openMemoListWindow() },
     { type: 'separator' },
@@ -498,6 +758,21 @@ ipcMain.handle('get-window-bounds', (event) => {
   return win && !win.isDestroyed() ? win.getBounds() : null
 })
 
+ipcMain.on('show-tooltip', async (event, payload) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (!win || win.isDestroyed()) return
+  try {
+    await showTooltipWindow(win, payload)
+  } catch (e) {
+    console.error('툴팁 표시 실패:', e)
+    hideTooltipWindow()
+  }
+})
+
+ipcMain.on('hide-tooltip', () => {
+  hideTooltipWindow()
+})
+
 // 리사이즈: 새 bounds 적용 + state 즉시 반영
 ipcMain.on('set-window-bounds', (event, bounds) => {
   const win = BrowserWindow.fromWebContents(event.sender)
@@ -585,6 +860,7 @@ app.whenReady().then(() => {
     }
   }
 
+  setupApplicationMenu()
   setupTray()
 
   // 패키징된 앱의 최초 실행 시 → 로그인 항목 자동 등록

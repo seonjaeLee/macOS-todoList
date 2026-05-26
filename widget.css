@@ -9,6 +9,16 @@ html {
   height: 100%;
 }
 
+/* ═══ 타이틀바 간격·아이콘 (숫자만 바꾼 뒤 npm start → 메모 창에서 Cmd+R) ═══ */
+:root {
+  --tb-btn: 22px;             /* 버튼 칸 크기 */
+  --tb-toolbar-gap: 6px;      /* 열기구·＋·색상환 사이 (촘촘) */
+  --tb-gap: 10px;             /* 툴바 묶음 ↔ 닫기 */
+  --tb-add-size: 26px;        /* 메모 추가 ＋ 글자 크기 */
+  --tb-float-icon: 15px;      /* 열기구 SVG 크기 */
+  --tb-palette-size: 18px;    /* 색상환 지름 */
+}
+
 body {
   width: 100%;
   height: 100%;
@@ -108,81 +118,309 @@ body {
 .titlebar-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-left: 8px;
+  gap: var(--tb-gap);
+  margin-left: 4px;
   flex-shrink: 0;
   overflow: visible;
   -webkit-app-region: no-drag;
 }
 
-/* macOS Electron(frameless)에서는 HTML title 툴팁이 안 뜨는 경우가 많아 CSS로 표시 */
-[data-tooltip] {
-  position: relative;
+/* 열기구·＋·색상환 묶음 */
+.titlebar-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--tb-toolbar-gap);
+  flex-shrink: 0;
 }
 
-/* ::before 사용 — .btn-palette는 ::after로 가운데 원을 그림 */
-[data-tooltip]::before {
-  content: attr(data-tooltip);
+.titlebar-toolbar:empty,
+.titlebar-toolbar:not(:has(button:not([hidden]))) {
+  display: none;
+}
+
+/* 타이틀바 아이콘 버튼 공통 크기 */
+.titlebar-toolbar .btn-float,
+.titlebar-toolbar .btn-add-widget,
+.titlebar-toolbar .btn-palette,
+.titlebar-actions > .btn-close {
+  width: var(--tb-btn);
+  height: var(--tb-btn);
+  min-width: var(--tb-btn);
+  min-height: var(--tb-btn);
+  box-sizing: border-box;
+}
+
+/* 툴팁: macOS 스타일 별도 panel 창 (widget.js) — CSS 가상 요소는 사용 안 함 */
+.widget [data-tooltip]::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* ── 더보기(⋮) 메뉴 ── */
+.titlebar-more {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.btn-more {
+  width: var(--tb-btn);
+  height: var(--tb-btn);
+  min-width: var(--tb-btn);
+  min-height: var(--tb-btn);
+  box-sizing: border-box;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: rgba(0,0,0,0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+  padding: 0;
+}
+
+.btn-more .icon-more {
+  display: block;
+}
+
+.btn-more:hover,
+.btn-more.is-open {
+  color: rgba(0,0,0,0.85);
+}
+
+.more-menu {
   position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 8px;
-  font-size: 11px;
-  line-height: 1.35;
-  white-space: nowrap;
-  color: #fff;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 168px;
+  padding: 4px 0;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+  z-index: 300;
+}
+
+.more-menu[hidden],
+.ctx-menu[hidden] {
+  display: none;
+}
+
+/* 본문 빈 바닥 우클릭 메뉴 (툴팁 톤 · 텍스트 너비에 맞춤) */
+.ctx-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: calc(100vw - 12px);
+  margin: 0;
+  padding: 4px 0;
   background: rgba(0, 0, 0, 0.82);
+  border: none;
   border-radius: 4px;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.12s ease, visibility 0.12s ease;
-  transition-delay: 0s;
-  z-index: 200;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  z-index: 500;
   font-family: Pretendard, -apple-system, 'Helvetica Neue', sans-serif;
 }
 
-[data-tooltip]:hover::before,
-[data-tooltip]:focus-visible::before {
-  opacity: 1;
-  visibility: visible;
-  transition-delay: 0.4s;
+.ctx-menu .more-menu-item {
+  width: auto;
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #fff;
+  gap: 8px;
 }
 
-.titlebar-actions [data-tooltip]:last-child::before,
-.titlebar-actions [data-tooltip]:nth-last-child(2)::before {
-  left: auto;
-  right: 0;
-  transform: none;
+.ctx-menu .more-menu-item:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
-/* ── 팔레트 버튼 ── */
-.btn-palette {
-  position: relative;
-  width: 18px;
-  height: 18px;
+.ctx-menu .more-menu-label {
+  flex: none;
+  text-align: left;
+}
+
+.ctx-menu .more-menu-check {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 11px;
+}
+
+.ctx-menu .more-menu-item--danger {
+  color: #ff8f8f;
+}
+
+.ctx-menu .more-menu-item--danger:hover {
+  background: rgba(255, 120, 120, 0.18);
+}
+
+.more-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
   border: none;
-  border-radius: 50%;
-  background: conic-gradient(
-    hsl(0,55%,72%),
-    hsl(45,55%,72%),
-    hsl(90,55%,72%),
-    hsl(135,55%,72%),
-    hsl(180,55%,72%),
-    hsl(225,55%,72%),
-    hsl(270,55%,72%),
-    hsl(315,55%,72%),
-    hsl(360,55%,72%)
-  );
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+  background: none;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-family: Pretendard, -apple-system, 'Helvetica Neue', sans-serif;
+  color: #1d1d1f;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.more-menu-item:hover {
+  background: rgba(0,0,0,0.06);
+}
+
+.more-menu-label {
+  flex: 1;
+  text-align: left;
+}
+
+.more-menu-check {
+  width: 14px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #007aff;
+  text-align: right;
+  opacity: 0;
+}
+
+.more-menu-item.is-active .more-menu-check {
+  opacity: 1;
+}
+
+.more-menu-item--danger {
+  color: #d70015;
+}
+
+.more-menu-item--danger:hover {
+  background: rgba(215, 0, 21, 0.08);
+}
+
+/* ── 항상 위에 띄우기 (열기구) ── */
+.btn-float {
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+/* 열기구 ↔ ＋ 사이만 4px 좁힘 (flex gap은 그대로, 오른쪽으로 당김) */
+.titlebar-toolbar .btn-float {
+  margin-right: -4px;
+}
+
+.btn-float:hover {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.btn-float.active {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.btn-float[hidden] {
+  display: none;
+}
+
+.svg-float {
+  width: var(--tb-float-icon);
+  height: var(--tb-float-icon);
+  display: block;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: fill 0.15s, stroke 0.15s;
+}
+
+.btn-float.active .svg-float {
+  fill: rgba(0, 0, 0, 0.7);
+  stroke: rgba(0, 0, 0, 0.7);
+}
+
+/* ── 새 메모 추가 · 색상 (넓은 창에서만 타이틀바에 표시) ── */
+body:not(.titlebar-expanded) .titlebar-toolbar .btn-add-widget,
+body:not(.titlebar-expanded) .titlebar-toolbar .btn-palette {
+  display: none;
+}
+
+.btn-add-widget {
+  display: flex;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: var(--tb-add-size);
+  font-weight: 600;
+  line-height: 0.85;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.btn-add-widget:hover {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.btn-palette {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
   cursor: pointer;
   flex-shrink: 0;
-  transition: transform 0.15s, box-shadow 0.15s;
   padding: 0;
 }
-/* 가운데 흰 원 — 색상환 도넛 형태 */
-.btn-palette::after {
+
+body.titlebar-expanded .titlebar-toolbar .btn-palette {
+  display: flex;
+}
+
+/* 원형 색상환 (잘림 방지 — 내부 span) */
+.palette-swatch {
+  position: relative;
+  display: block;
+  width: var(--tb-palette-size);
+  height: var(--tb-palette-size);
+  border-radius: 50%;
+  background: conic-gradient(
+    hsl(0, 55%, 72%),
+    hsl(45, 55%, 72%),
+    hsl(90, 55%, 72%),
+    hsl(135, 55%, 72%),
+    hsl(180, 55%, 72%),
+    hsl(225, 55%, 72%),
+    hsl(270, 55%, 72%),
+    hsl(315, 55%, 72%),
+    hsl(360, 55%, 72%)
+  );
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.14);
+  flex-shrink: 0;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.palette-swatch::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -190,12 +428,31 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--widget-color, #FFF176);
-  opacity: 0.85;
+  background: var(--widget-color, #fff176);
+  opacity: 0.9;
+  pointer-events: none;
 }
-.btn-palette:hover {
-  transform: scale(1.15);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.25);
+
+.btn-palette:hover .palette-swatch {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28);
+}
+
+/* 가로가 넓으면 ⋮ 대신 타이틀바에 아이콘 펼침 */
+body.titlebar-expanded .titlebar-toolbar {
+  display: flex;
+}
+
+body.titlebar-expanded .titlebar-toolbar .btn-add-widget {
+  display: flex;
+}
+
+body.titlebar-expanded .titlebar-more {
+  display: none;
+}
+
+body.titlebar-expanded .titlebar-toolbar .btn-float[hidden] {
+  display: flex;
 }
 
 /* ── 숨김 color input (클릭 시 네이티브 피커 오픈) ── */
@@ -207,71 +464,7 @@ body {
   pointer-events: none;
 }
 
-.btn-add-widget {
-  width: 22px;
-  height: 22px;
-  border: none;
-  border-radius: 50%;
-  background: none;
-  color: rgba(0,0,0,0.5);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s;
-}
-
-.btn-add-widget:hover {
-  color: rgba(0,0,0,0.85);
-}
-
-/* ── 항상 위에 띄우기 (열기구) 버튼 ── */
-.btn-float {
-  width: 22px;
-  height: 22px;
-  border: none;
-  border-radius: 50%;
-  background: none;
-  color: rgba(0,0,0,0.5);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s, transform 0.2s, background 0.15s;
-  padding: 0;
-}
-
-.btn-float:hover {
-  color: rgba(0,0,0,0.85);
-  transform: translateY(-2px); /* 호버 시 가볍게 위로 둥실 떠오름 */
-  background: rgba(0,0,0,0.05);
-}
-
-.svg-float {
-  width: 14px;
-  height: 14px;
-  stroke: currentColor;
-  stroke-width: 2;
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: fill 0.2s, stroke 0.2s, transform 0.2s;
-}
-
-.btn-float.active {
-  transform: translateY(-2px); /* 활성화 시 둥둥 뜬 채 유지 */
-}
-
-.btn-float.active .svg-float {
-  fill: rgba(0,0,0,0.7);
-  stroke: rgba(0,0,0,0.7);
-}
-
 .btn-close {
-  width: 22px;
-  height: 22px;
   border: none;
   border-radius: 50%;
   background: rgba(0,0,0,0.12);
@@ -494,6 +687,15 @@ body {
   display: none;
 }
 
+/* 접힌 창(높이 44px)에서는 ⋮·드롭다운이 창 밖으로 잘리므로 더보기 숨김 */
+.widget.collapsed .titlebar-more {
+  display: none !important;
+}
+
+.widget.collapsed .more-menu {
+  display: none !important;
+}
+
 /* ── 리사이즈 핸들 ── */
 .resize-handle {
   position: fixed;
@@ -509,8 +711,9 @@ body {
 /* ── 저명도(명도 80% 이하) 대비 모드: 텍스트를 흰색 계열로 전환 ── */
 body.low-light .btn-collapse,
 body.low-light .title,
-body.low-light .btn-add-widget,
+body.low-light .btn-more,
 body.low-light .btn-float,
+body.low-light .btn-add-widget,
 body.low-light .btn-close,
 body.low-light .memo-desc,
 body.low-light .new-todo,
@@ -521,9 +724,30 @@ body.low-light .btn-clear {
   color: rgba(255,255,255,0.92) !important;
 }
 
+body.low-light .more-menu {
+  background: rgba(40,40,40,0.96);
+  border-color: rgba(255,255,255,0.15);
+}
+
+body.low-light .more-menu-item {
+  color: rgba(255,255,255,0.92);
+}
+
+body.low-light .more-menu-item:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+body.low-light .more-menu-item--danger {
+  color: #ff6b6b;
+}
+
+body.low-light .more-menu-item--danger:hover {
+  background: rgba(255, 107, 107, 0.15);
+}
+
 body.low-light .btn-float.active .svg-float {
-  fill: rgba(255,255,255,0.92) !important;
-  stroke: rgba(255,255,255,0.92) !important;
+  fill: rgba(255, 255, 255, 0.92) !important;
+  stroke: rgba(255, 255, 255, 0.92) !important;
 }
 
 body.low-light .title.is-placeholder,

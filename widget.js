@@ -16,13 +16,124 @@ const $body        = document.getElementById('body')
 const $todoList  = document.getElementById('todo-list')
 const $newTodo   = document.getElementById('new-todo')
 const $btnAddTodo   = document.getElementById('btn-add-todo')
-const $btnAddWidget      = document.getElementById('btn-add-widget')
 const $btnClose          = document.getElementById('btn-close')
 const $btnClear          = document.getElementById('btn-clear')
-const $btnPalette  = document.getElementById('btn-palette')
+const $btnMore     = document.getElementById('btn-more')
 const $btnFloat    = document.getElementById('btn-float')
+const $btnAddWidget = document.getElementById('btn-add-widget')
+const $btnPalette  = document.getElementById('btn-palette')
+const $moreMenu    = document.getElementById('more-menu')
+const $moreAdd     = document.getElementById('more-add')
+const $moreColor   = document.getElementById('more-color')
+const $moreFloat   = document.getElementById('more-float')
+const $moreDelete  = document.getElementById('more-delete')
+const $ctxMenu     = document.getElementById('ctx-menu')
 const $colorInput  = document.getElementById('color-input')
 const $memoDesc    = document.getElementById('memo-desc')
+
+/** 넓은 창에서만 타이틀바 아이콘 펼침 (중간 크기는 ⋮ 유지) */
+const TITLEBAR_EXPAND_MIN_WIDTH = 400
+
+/** macOS 스타일 panel 툴팁 (main.js 공유 창 1개) */
+const TOOLTIP_DELAY_MS = 400
+let tooltipTimer = null
+let tooltipHoverEl = null
+let tooltipRequestId = 0
+
+// ───────────────────────────── 더보기 메뉴 ─────────────────────────────
+function isMoreMenuOpen() {
+  return $moreMenu && !$moreMenu.hidden
+}
+
+function openMoreMenu() {
+  $moreMenu.hidden = false
+  $btnMore.classList.add('is-open')
+  $btnMore.setAttribute('aria-expanded', 'true')
+}
+
+function closeMoreMenu() {
+  if ($moreMenu.hidden) return
+  $moreMenu.hidden = true
+  $btnMore.classList.remove('is-open')
+  $btnMore.setAttribute('aria-expanded', 'false')
+}
+
+function isContextMenuOpen() {
+  return $ctxMenu && !$ctxMenu.hidden
+}
+
+function closeContextMenu() {
+  if (!$ctxMenu || $ctxMenu.hidden) return
+  $ctxMenu.hidden = true
+}
+
+function closeAllMenus() {
+  closeMoreMenu()
+  closeContextMenu()
+}
+
+function syncMenuFloatState() {
+  const isActive = !!(widgetData && widgetData.alwaysOnTop)
+  $moreFloat.classList.toggle('is-active', isActive)
+  const floatBtn = $ctxMenu?.querySelector('[data-action="float"]')
+  if (floatBtn) floatBtn.classList.toggle('is-active', isActive)
+}
+
+async function runMenuAction(action) {
+  if (!widgetData) return
+  switch (action) {
+    case 'add':
+      closeAllMenus()
+      window.api.createWidget()
+      break
+    case 'color':
+      closeAllMenus()
+      $colorInput.click()
+      break
+    case 'float':
+      toggleAlwaysOnTop()
+      closeAllMenus()
+      break
+    case 'delete': {
+      closeAllMenus()
+      const ok = window.confirm('이 메모를 삭제할까요?')
+      if (!ok) return
+      await window.api.deleteWidgetById(widgetData.id)
+      break
+    }
+    default:
+      break
+  }
+}
+
+function isTitlebarExpanded() {
+  return document.body.classList.contains('titlebar-expanded')
+}
+
+function updateTitlebarLayout() {
+  const expanded = window.innerWidth >= TITLEBAR_EXPAND_MIN_WIDTH
+  document.body.classList.toggle('titlebar-expanded', expanded)
+  if (expanded && isMoreMenuOpen()) closeMoreMenu()
+  if (widgetData) updateAlwaysOnTopUI(!!widgetData.alwaysOnTop)
+}
+
+function updateAlwaysOnTopUI(isActive) {
+  syncMenuFloatState()
+  $btnFloat.classList.toggle('active', isActive)
+  if (isTitlebarExpanded()) {
+    $btnFloat.hidden = false
+  } else {
+    $btnFloat.hidden = !isActive
+  }
+}
+
+function toggleAlwaysOnTop() {
+  if (!widgetData) return
+  const isActive = !widgetData.alwaysOnTop
+  widgetData.alwaysOnTop = isActive
+  updateAlwaysOnTopUI(isActive)
+  sync({ alwaysOnTop: isActive })
+}
 
 // ───────────────────────────── 초기화 ─────────────────────────────
 window.api.onInitWidget((data) => {
@@ -32,19 +143,72 @@ window.api.onInitWidget((data) => {
 
   $colorInput.value = data.color
   $memoDesc.value = data.desc || ''
-  // 로드 시 저장된 내용에 맞게 높이 복원 (DOM 렌더 후)
   requestAnimationFrame(resizeDesc)
 
   if (data.collapsed) {
     $widget.classList.add('collapsed')
   }
 
-  if (data.alwaysOnTop) {
-    $btnFloat.classList.add('active')
-  }
+  updateAlwaysOnTopUI(!!data.alwaysOnTop)
+  updateTitlebarLayout()
 
   data.todos.forEach((todo) => appendTodoItem(todo))
 })
+
+window.addEventListener('resize', updateTitlebarLayout)
+if (typeof ResizeObserver !== 'undefined') {
+  new ResizeObserver(updateTitlebarLayout).observe(document.documentElement)
+}
+
+function setupNativeTooltips() {
+  document.querySelectorAll('[data-tooltip]').forEach((el) => {
+    if (!el.closest('.widget')) return
+    el.addEventListener('mouseenter', onTooltipMouseEnter)
+    el.addEventListener('mouseleave', onTooltipMouseLeave)
+  })
+}
+
+function onTooltipMouseEnter(e) {
+  const el = e.currentTarget
+  const text = el.getAttribute('data-tooltip')
+  if (!text) return
+
+  tooltipHoverEl = el
+  clearTimeout(tooltipTimer)
+  const requestId = ++tooltipRequestId
+
+  tooltipTimer = setTimeout(() => {
+    if (tooltipHoverEl !== el || requestId !== tooltipRequestId) return
+    showNativeTooltipFor(el, text, requestId)
+  }, TOOLTIP_DELAY_MS)
+}
+
+function onTooltipMouseLeave(e) {
+  const el = e.currentTarget
+  if (tooltipHoverEl === el) tooltipHoverEl = null
+  clearTimeout(tooltipTimer)
+  tooltipRequestId++
+  window.api.hideTooltip()
+}
+
+async function showNativeTooltipFor(el, text, requestId) {
+  if (requestId !== tooltipRequestId || tooltipHoverEl !== el) return
+
+  const rect = el.getBoundingClientRect()
+  if (!rect.width || !rect.height) return
+
+  window.api.showTooltip({
+    anchorLeft: rect.left,
+    anchorTop: rect.top,
+    anchorWidth: rect.width,
+    anchorHeight: rect.height,
+    text,
+    // 타이틀바 아이콘: 도크처럼 버튼 위쪽에 표시 (본문 쪽으로 길게 내려가지 않음)
+    preferBelow: false,
+  })
+}
+
+setupNativeTooltips()
 
 // ───────────────────────────── 색상 적용 ─────────────────────────────
 function applyColor(color) {
@@ -118,7 +282,6 @@ function enterTitleEditMode() {
   $title.focus()
 }
 
-// ───────────────────────────── 타이틀 편집 (클릭 → 편집 모드) ─────────────────────────────
 $title.addEventListener('click', (e) => {
   e.stopPropagation()
   enterTitleEditMode()
@@ -136,15 +299,8 @@ window.api.onExternalTitleUpdate((newTitle) => {
 window.api.onExternalAlwaysOnTopUpdate((value) => {
   if (widgetData) {
     widgetData.alwaysOnTop = value
-    $btnFloat.classList.toggle('active', value)
+    updateAlwaysOnTopUI(value)
   }
-})
-
-$btnFloat.addEventListener('click', () => {
-  if (!widgetData) return
-  const isActive = $btnFloat.classList.toggle('active')
-  widgetData.alwaysOnTop = isActive
-  sync({ alwaysOnTop: isActive })
 })
 
 $title.addEventListener('keydown', (e) => {
@@ -158,7 +314,7 @@ $title.addEventListener('keydown', (e) => {
 
 $title.addEventListener('blur', () => {
   $title.contentEditable = 'false'
-  $title.scrollLeft = 0  // 편집 후 스크롤을 처음으로 되돌려 앞부분부터 표시
+  $title.scrollLeft = 0
   const newTitle = $title.textContent.trim()
   widgetData.title = newTitle
   renderTitle(newTitle)
@@ -167,7 +323,6 @@ $title.addEventListener('blur', () => {
 
 // ───────────────────────────── 접기/펼치기 (▾ 버튼 클릭) ─────────────────────────────
 
-// 타이틀바 누를 때 이 위젯을 최상단으로 올림
 $titlebar.addEventListener('mousedown', () => {
   if (widgetData) window.api.focusWidget(widgetData.id)
 })
@@ -177,8 +332,96 @@ $btnCollapse.addEventListener('click', () => toggleCollapse())
 function toggleCollapse() {
   widgetData.collapsed = !widgetData.collapsed
   $widget.classList.toggle('collapsed', widgetData.collapsed)
+  if (widgetData.collapsed) closeAllMenus()
   sync({ collapsed: widgetData.collapsed })
 }
+
+// ───────────────────────────── 더보기 메뉴 이벤트 ─────────────────────────────
+$btnMore.addEventListener('click', (e) => {
+  e.stopPropagation()
+  if (isMoreMenuOpen()) closeMoreMenu()
+  else openMoreMenu()
+})
+
+function bindMenuItem(el, action) {
+  el.addEventListener('click', (e) => {
+    e.stopPropagation()
+    runMenuAction(action)
+  })
+}
+
+bindMenuItem($moreAdd, 'add')
+bindMenuItem($moreColor, 'color')
+bindMenuItem($moreDelete, 'delete')
+bindMenuItem($moreFloat, 'float')
+
+$ctxMenu?.querySelectorAll('[data-action]').forEach((el) => {
+  bindMenuItem(el, el.dataset.action)
+})
+
+$btnFloat.addEventListener('click', (e) => {
+  e.stopPropagation()
+  toggleAlwaysOnTop()
+})
+
+$btnPalette.addEventListener('click', (e) => {
+  e.stopPropagation()
+  $colorInput.click()
+})
+
+$btnAddWidget.addEventListener('click', (e) => {
+  e.stopPropagation()
+  window.api.createWidget()
+})
+
+function canShowBodyContextMenu(target) {
+  if (!$widget || $widget.classList.contains('collapsed')) return false
+  if (target.closest('#titlebar, .resize-handle, .more-menu, .ctx-menu, #titlebar-more')) return false
+  if (target.closest('.todo-item, .input-row, .memo-desc, .footer, #new-todo, .btn-add-todo, .btn-clear')) {
+    return false
+  }
+  return target.closest('#widget')
+}
+
+function openContextMenu(clientX, clientY) {
+  closeMoreMenu()
+  syncMenuFloatState()
+  $ctxMenu.hidden = false
+  $ctxMenu.style.visibility = 'hidden'
+  $ctxMenu.style.left = '0px'
+  $ctxMenu.style.top = '0px'
+
+  requestAnimationFrame(() => {
+    const pad = 6
+    const w = $ctxMenu.offsetWidth
+    const h = $ctxMenu.offsetHeight
+    const x = Math.max(pad, Math.min(clientX, window.innerWidth - w - pad))
+    const y = Math.max(pad, Math.min(clientY, window.innerHeight - h - pad))
+    $ctxMenu.style.left = `${x}px`
+    $ctxMenu.style.top = `${y}px`
+    $ctxMenu.style.visibility = 'visible'
+  })
+}
+
+$widget.addEventListener('contextmenu', (e) => {
+  if (!canShowBodyContextMenu(e.target)) return
+  e.preventDefault()
+  openContextMenu(e.clientX, e.clientY)
+})
+
+document.addEventListener('mousedown', (e) => {
+  if (isContextMenuOpen() && !e.target.closest('#ctx-menu')) closeContextMenu()
+  if (!isMoreMenuOpen()) return
+  if (e.target.closest('#titlebar-more')) return
+  closeMoreMenu()
+})
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && (isMoreMenuOpen() || isContextMenuOpen())) {
+    e.stopPropagation()
+    closeAllMenus()
+  }
+})
 
 // ───────────────────────────── 할일 추가 ─────────────────────────────
 function addTodo() {
@@ -198,7 +441,6 @@ $newTodo.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.isComposing) addTodo()
 })
 
-// ───────────────────────────── 할일 아이템 DOM 생성 ─────────────────────────────
 function appendTodoItem(todo) {
   const li = document.createElement('li')
   li.className = 'todo-item' + (todo.done ? ' done' : '')
@@ -260,18 +502,10 @@ function appendTodoItem(todo) {
   $todoList.appendChild(li)
 }
 
-// ───────────────────────────── 완료 항목 일괄 삭제 ─────────────────────────────
 $btnClear.addEventListener('click', () => {
   widgetData.todos = widgetData.todos.filter((t) => !t.done)
-  // DOM 갱신
   $todoList.querySelectorAll('.todo-item.done').forEach((el) => el.remove())
   sync({ todos: widgetData.todos })
-})
-
-// ───────────────────────────── 컬러 피커 (네이티브) ─────────────────────────────
-$btnPalette.addEventListener('click', (e) => {
-  e.stopPropagation()
-  $colorInput.click()
 })
 
 $colorInput.addEventListener('input', (e) => {
@@ -281,7 +515,12 @@ $colorInput.addEventListener('input', (e) => {
   window.api.setWindowColor(color)
 })
 
-// ───────────────────────────── 개요 자동높이 + 저장 ─────────────────────────────
+$colorInput.addEventListener('change', (e) => {
+  const color = e.target.value
+  widgetData.color = color
+  sync({ color })
+})
+
 function resizeDesc() {
   $memoDesc.style.height = '1px'
   const full = $memoDesc.scrollHeight
@@ -297,23 +536,10 @@ $memoDesc.addEventListener('blur', () => {
   sync({ desc: $memoDesc.value })
 })
 
-$colorInput.addEventListener('change', (e) => {
-  const color = e.target.value
-  widgetData.color = color
-  sync({ color })
-})
-
-// ───────────────────────────── 새 위젯 추가 ─────────────────────────────
-$btnAddWidget.addEventListener('click', () => {
-  window.api.createWidget()
-})
-
-// ───────────────────────────── 위젯 닫기 ─────────────────────────────
 $btnClose.addEventListener('click', () => {
   window.api.hideWidget()
 })
 
-// ───────────────────────────── 리사이즈 핸들 ─────────────────────────────
 document.querySelectorAll('.resize-handle').forEach((el) => {
   el.addEventListener('pointerdown', async (e) => {
     e.preventDefault()
@@ -324,7 +550,6 @@ document.querySelectorAll('.resize-handle').forEach((el) => {
     const startX = e.screenX
     const startY = e.screenY
 
-    // await 중 pointerup이 먼저 오면 취소 처리
     let cancelled = false
     const onEarlyUp = () => { cancelled = true }
     el.addEventListener('pointerup', onEarlyUp, { once: true })
@@ -332,7 +557,7 @@ document.querySelectorAll('.resize-handle').forEach((el) => {
     const sb = await window.api.getWindowBounds()
 
     el.removeEventListener('pointerup', onEarlyUp)
-    if (!sb || cancelled) return   // 이미 손을 뗐으면 아무것도 하지 않음
+    if (!sb || cancelled) return
 
     function onMove(me) {
       const dx = me.screenX - startX
@@ -348,6 +573,7 @@ document.querySelectorAll('.resize-handle').forEach((el) => {
       }
 
       window.api.setWindowBounds(b)
+      updateTitlebarLayout()
     }
 
     el.addEventListener('pointermove', onMove)
@@ -359,7 +585,6 @@ document.querySelectorAll('.resize-handle').forEach((el) => {
   })
 })
 
-// ───────────────────────────── 상태 동기화 ─────────────────────────────
 function sync(fields) {
   if (!widgetData) return
   window.api.updateWidget({ id: widgetData.id, ...fields })
