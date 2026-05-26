@@ -4,10 +4,13 @@
   "description": "macOS desktop post-it todo widget",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron .",
+    "start": "node scripts/start-dev.js",
+    "dev": "node scripts/start-dev.js",
+    "start:electron": "electron .",
+    "open:app": "open -a todoList-myfunfun",
     "verify": "node --check main.js && node --check widget.js && node --check preload.js && node --check memo-list.js",
-    "build": "npm run verify && electron-builder --mac dir && rm -rf \"/Applications/todoList-myfunfun.app\" && cp -R \"dist/mac-arm64/todoList-myfunfun.app\" /Applications/",
+    "build:dir": "npm run verify && electron-builder --mac dir",
+    "build": "npm run build:dir && rm -rf \"/Applications/todoList-myfunfun.app\" && cp -R \"dist/mac-arm64/todoList-myfunfun.app\" /Applications/",
     "build:dmg": "electron-builder --mac dmg",
     "build:release": "electron-builder --mac dmg zip"
   },

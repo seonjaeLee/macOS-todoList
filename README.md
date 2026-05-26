@@ -2,6 +2,8 @@
 
 macOS 메뉴바 기반 포스트잇 스타일 할일 관리 앱
 
+> **문서 안내**: 이 파일은 **개발 레포**용입니다. 일반 사용자용 dmg 설치 가이드는 공개 레포 [`macOS-todoList-myfunfun`](https://github.com/seonjaeLee/macOS-todoList-myfunfun) / 로컬 `public-release-work/README.md`를 참고하세요.
+
 ---
 
 ## 실행 환경
@@ -26,13 +28,35 @@ cd macOS-todoList
 npm install
 ```
 
-### 3. 빌드 및 /Applications 복사
+### 3. 개발 실행 (`npm start`)
+
+```bash
+npm start
+```
+
+- `dist/`에 빌드된 **실제 앱**을 실행합니다 (`electron .` 아님 → Dock에 Electron/이상 아이콘 안 뜸).
+- 소스 수정 후 다시 `npm start`하면 변경 시 **자동으로 `build:dir`** 후 실행됩니다.
+- Dock 체크 아이콘은 **설치본과 동일**합니다. 실행 전 다른 인스턴스는 **`Cmd+Q`로 종료**하세요.
+- 아이콘·Dock 정책: **`docs/icon-policy.md`**
+- (비상) `npm run start:electron` = 예전 `electron .` 방식 — Dock 문제 재발 가능
+
+### 4. 빌드 및 /Applications 복사
 
 ```bash
 npm run build
 ```
 
-빌드 완료 후 `/Applications/todoList-myfunfun.app` 이 자동으로 생성됩니다.
+빌드 완료 후 `/Applications/todoList-myfunfun.app` 이 자동으로 생성됩니다. (`npm run verify`가 선행됩니다.)
+
+### 5. Release용 dmg·zip (선택)
+
+GitHub Releases 업로드용:
+
+```bash
+npm run build:release
+```
+
+산출물은 `dist/`에 생성됩니다 (예: `todoList-myfunfun-1.1.0-arm64.dmg`). 배포 절차는 `docs/release.md`를 참고하세요.
 
 ---
 

@@ -30,35 +30,45 @@
 
 ### 아이콘 정책 (현재 기준)
 
-- 앱 아이콘(실행/종료 시 Dock 아이콘)은 `build/icon.icns`를 기준으로 사용.
-- 개발 실행(`npm start`)에서는 동일 디자인의 `build/icon.png`를 Dock 아이콘으로 강제 적용.
-- 트레이 아이콘은 코드에서 템플릿 PNG를 생성해 사용하며, 별도 `todoList-icon.png` 파일은 사용하지 않음.
+- 상세·재발 방지: **`docs/icon-policy.md`** (수정 전 필독).
+- 설치본 Dock: `build/icon.icns` 번들 → `dock.setIcon` **호출하지 않음**.
+- 개발: `npm start` → `dist` 앱 실행(`scripts/start-dev.js`). `electron .`·개발 `setIcon` 금지.
+- 트레이: `status_icon.png` → 16×16 resize (`setupTray`). `todoList-icon.png` 미사용.
+- `npm start`와 `/Applications` 설치본은 **별도 앱** — 개발 전 설치본 `Cmd+Q` 종료.
 
 ---
 
 ## 2026-05-26
 
 - 타이틀바 UI 정리:
-  - 새 메모: 타이틀바 `＋` 제거, **⌘N** (`메모 → 새 메모 추가`) 및 트레이 메뉴 유지.
-  - 색상변경·항상 위에 띄우기: **`⋯` 더보기 메뉴**로 통합, **닫기 `✕`** 만 타이틀바에 유지.
+  - **좁은 창**(기본): 타이틀바에 `⋯` 더보기·`✕` 닫기만 표시. 메모 추가·색상·항상 위에 띄우기는 더보기 메뉴 또는 **⌘N** / 트레이 메뉴.
+  - **넓은 창**(`titlebar-expanded`): 열기구·`＋`·색상환을 타이틀바에 펼침, `⋯` 숨김.
   - `guide.html` 사용 가이드 반영.
 - **v1.1.0** 패치 (코드 필드: `alwaysOnTop`):
-- **항상 위에 띄우기** 기능 추가:
-  - 원하는 메모를 다른 창·앱 위에 표시. 아이콘은 열기구(`btn-float`).
-  - 메모 타이틀바 오른쪽(닫기 `✕` 왼쪽) 열기구 버튼, 클릭 시 on/off.
-  - 활성 시 호버·선택 스타일(`translateY`), 저명도(`low-light`)에서 흰색 계열 반전.
-  - `BrowserWindow.setAlwaysOnTop(true, 'floating')` — 띄워 둔 상태에서도 드래그·리사이즈 가능.
-  - `widgets.json`에 저장, 재시작 후 복원.
-- 메모 목록 연동:
-  - `btn-icon-float` 열기구로 동일 기능 on/off, 띄워 둔 중 파란색 active.
-  - IPC `external-always-on-top-update`로 메모·목록 UI 동기화.
-- 사용 가이드(`guide.html`)·표기 통일:
-  - 기능·툴팁 명칭 **항상 위에 띄우기** (「맨 위 고정」은 핀 고정 오해 방지).
-  - 메모 관리: `✕` 닫기(숨기기), 삭제는 메모 목록 휴지통, **모두 숨기기/보이기**.
-  - 가이드에 열기구 SVG 인라인, **메모 목록에서 항상 위에 띄우기** 항목.
-- 타이틀바·목록 툴팁: `색상변경` · `메모추가` · `항상 위에 띄우기` · `닫기`.
-- macOS Electron(frameless) HTML `title` 미표시 → `data-tooltip` + CSS (`::before`; 색상환 `::after` 도넛과 충돌 해결).
-- 릴리스: `docs/release-notes-v1.1.0.md`, `package.json` `1.1.0`.
+  - **항상 위에 띄우기** 기능 추가:
+    - 원하는 메모를 다른 창·앱 위에 표시. 아이콘은 열기구(`btn-float`).
+    - 메모 타이틀바(넓은 창) 또는 더보기 메뉴에서 on/off.
+    - 활성 시 호버·선택 스타일(`translateY`), 저명도(`low-light`)에서 흰색 계열 반전.
+    - `BrowserWindow.setAlwaysOnTop(true, 'floating')` — 띄워 둔 상태에서도 드래그·리사이즈 가능.
+    - `widgets.json`에 저장, 재시작 후 복원.
+  - 메모 목록 연동:
+    - `btn-icon-float` 열기구로 동일 기능 on/off, 띄워 둔 중 파란색 active.
+    - IPC `external-always-on-top-update`로 메모·목록 UI 동기화.
+  - 사용 가이드(`guide.html`)·표기 통일:
+    - 기능·툴팁 명칭 **항상 위에 띄우기** (「맨 위 고정」은 핀 고정 오해 방지).
+    - 메모 관리: `✕` 닫기(숨기기), 삭제는 메모 목록 휴지통, **모두 숨기기/보이기**.
+    - 가이드에 열기구 SVG 인라인, **메모 목록에서 항상 위에 띄우기** 항목.
+  - 툴팁:
+    - 메모 타이틀바: `data-tooltip` + 별도 panel 창(`tooltip.html`, `widget.js` → `main.js`). CSS `::before`는 비활성(색상환 `::after` 도넛과 분리).
+    - 메모 목록: CSS `[data-tooltip]::before` 유지.
+    - 메모 타이틀바 문구: `메모지 색상 변경` · `메모추가` · `항상 위에 띄우기` · `더보기` · `닫기`.
+  - 릴리스: `docs/release-notes-v1.1.0.md`, `package.json` `1.1.0`.
+- 개발 문서 정리: `current_task.md`·`history.md`·`docs/*` 오타·타이틀바·툴팁·배포 절차를 코드 기준으로 통일.
+- `npm start`: `electron .` 대신 `scripts/start-dev.js` → `dist/...app` 실행(Dock 체크 아이콘 정상). `build:dir` 분리.
+- `docs/icon-policy.md` 추가(Dock·dist vs `/Applications`·재발 방지).
+- 사용 가이드(`guide.html`):
+  - **더보기 메뉴** 설명 간략화(픽셀·툴팁 세부 제거).
+  - **창 조작**에 **빈 화면 우클릭** 항목 추가(펼친 메모 본문 빈 곳 → `⋮`와 동일 메뉴).
 
 ## 2026-05-21
 

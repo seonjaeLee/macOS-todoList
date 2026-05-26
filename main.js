@@ -18,7 +18,23 @@ app.on('second-instance', () => {
   })
 })
 
-// Dock 아이콘은 whenReady 이후에 커스텀 이미지로 표시
+// ───────────────────────────── Dock (설치·dist 앱) ─────────────────────────────
+// npm start = dist 바이너리(isPackaged). start:electron = Electron 호스트( Dock 이상 가능).
+// 정책: docs/icon-policy.md
+
+if (process.platform === 'darwin' && !app.isPackaged) {
+  app.setActivationPolicy('accessory')
+}
+
+function configureAppPresentation() {
+  if (process.platform !== 'darwin' || !app.dock) return
+  if (app.isPackaged) {
+    app.setActivationPolicy('regular')
+    app.dock.show()
+  } else if (app.dock) {
+    app.dock.hide()
+  }
+}
 
 // ───────────────────────────── 데이터 저장 경로 ─────────────────────────────
 const DATA_FILE = path.join(app.getPath('userData'), 'widgets.json')
@@ -851,14 +867,7 @@ ipcMain.handle('delete-widget-by-id', (_event, widgetId) => {
 
 // ───────────────────────────── 앱 시작 ─────────────────────────────
 app.whenReady().then(() => {
-  if (app.dock) {
-    app.dock.show()
-    if (!app.isPackaged) {
-      const devDockIconPath = path.join(__dirname, 'build', 'icon.png')
-      const devDockIcon = nativeImage.createFromPath(devDockIconPath)
-      if (!devDockIcon.isEmpty()) app.dock.setIcon(devDockIcon)
-    }
-  }
+  configureAppPresentation()
 
   setupApplicationMenu()
   setupTray()
