@@ -190,9 +190,10 @@ else if (process.platform === 'win32') { ... }
 
 ### Phase 2 — OS 분기
 
-- [ ] `setupApplicationMenu` — Windows 편집 메뉴 또는 가속키
+- [x] `setupApplicationMenu` — Windows 파일·편집·메모·종료
+- [x] 트레이·작업 표시줄·항상 위·exe 아이콘 (1차 코드 반영, **집 PC 재테스트 필요**)
+- [x] `widget.css` `platform-win32` 타이틀바·＋ 축소
 - [ ] `scripts/start-dev` — Windows 개발 실행 경로
-- [ ] 트레이·닫기·숨기기 동작 확인
 - [ ] `widget.js` 단축키 `Ctrl` (제목·할 일 입력)
 
 ### Phase 3 — 품질·배포

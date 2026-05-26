@@ -40,6 +40,14 @@
 
 ## 2026-05-26
 
+### Windows Phase 2 (1차 동작 수정, 테스트 대기)
+
+- 트레이: `setTemplateImage`는 mac만, win은 32px·좌클릭 메뉴.
+- 항상 위: win `screen-saver` 레벨 (`applyAlwaysOnTop`).
+- 작업 표시줄: win 메모·목록·가이드 `skipTaskbar: false`, `AppUserModelId`, exe 아이콘(`signAndEditExecutable: true`).
+- 메뉴: win **파일**(가이드·메모 목록·종료 Alt+F4)·편집·메모.
+- UI: `body.platform-win32` 타이틀바·＋ 크기 축소.
+
 ### Windows 포팅 Phase 1 (빌드 인프라)
 
 - `docs/windows-port.md` — 단일 레포·Phase 0~4 계획.

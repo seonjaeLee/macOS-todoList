@@ -138,6 +138,9 @@ function toggleAlwaysOnTop() {
 // ───────────────────────────── 초기화 ─────────────────────────────
 window.api.onInitWidget((data) => {
   widgetData = data
+  if (window.api.getPlatform?.() === 'win32') {
+    document.body.classList.add('platform-win32')
+  }
   applyColor(data.color)
   renderTitle(data.title)
 

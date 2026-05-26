@@ -1,6 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('api', {
+  getPlatform: () => process.platform,
+
   // 메인 → 렌더러
   onInitWidget: (cb) => ipcRenderer.on('init-widget', (_e, data) => cb(data)),
   onStartTitleEdit: (cb) => ipcRenderer.on('start-title-edit', () => cb()),

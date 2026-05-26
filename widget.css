@@ -19,6 +19,32 @@ html {
   --tb-palette-size: 18px;    /* 색상환 지름 */
 }
 
+/* Windows: DPI·시스템 폰트로 타이틀바·＋가 mac보다 커 보이는 보정 */
+body.platform-win32 {
+  --tb-btn: 18px;
+  --tb-toolbar-gap: 5px;
+  --tb-gap: 8px;
+  --tb-add-size: 20px;
+  --tb-float-icon: 13px;
+  --tb-palette-size: 16px;
+}
+
+body.platform-win32 .titlebar {
+  height: 36px;
+  padding: 0 8px;
+  gap: 5px;
+}
+
+body.platform-win32 .btn-collapse {
+  width: 16px;
+  height: 16px;
+  font-size: 11px;
+}
+
+body.platform-win32 .title {
+  font-size: 12px;
+}
+
 body {
   width: 100%;
   height: 100%;

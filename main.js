@@ -3,6 +3,15 @@ const path = require('path')
 const fs = require('fs')
 const zlib = require('zlib')
 
+const IS_MAC = process.platform === 'darwin'
+const IS_WIN = process.platform === 'win32'
+// mac: 메뉴바 트레이만. win: 작업 표시줄에도 표시(트레이·Alt+Tab·종료 경로)
+const SKIP_WIDGET_TASKBAR = IS_MAC
+
+if (IS_WIN) {
+  app.setAppUserModelId('com.desktop-todo')
+}
+
 // ───────────────────────────── 싱글 인스턴스 보장 ─────────────────────────────
 // 이미 실행 중인 인스턴스가 있으면 즉시 종료
 const gotLock = app.requestSingleInstanceLock()
@@ -159,7 +168,7 @@ let allWidgetsHiddenMode = false
 const COLORS = ['#FFF176', '#FFD54F', '#80DEEA', '#EF9A9A', '#CE93D8', '#A5D6A7']
 const WIDGET_W = 260
 const WIDGET_H_EXPANDED = 340
-const WIDGET_H_COLLAPSED = 44
+const WIDGET_H_COLLAPSED = IS_WIN ? 38 : 44
 const COLUMN_GAP = 1
 // x 구간 겹침이 아니라 중심 X로 열 판정 (두 시각적 열이 한 열로 묶이는 것 방지)
 const COLUMN_X_CENTER_THRESHOLD = 80
@@ -227,6 +236,18 @@ function hideTooltipWindow() {
 
 function clamp(n, min, max) {
   return Math.min(Math.max(n, min), max)
+}
+
+/** mac: floating. win: screen-saver(다른 창 위 고정에 유리). */
+function applyAlwaysOnTop(win, enabled) {
+  if (!win || win.isDestroyed()) return
+  if (!enabled) {
+    win.setAlwaysOnTop(false)
+    return
+  }
+  if (IS_WIN) win.setAlwaysOnTop(true, 'screen-saver')
+  else if (IS_MAC) win.setAlwaysOnTop(true, 'floating')
+  else win.setAlwaysOnTop(true)
 }
 
 async function layoutTooltipContent(text, preferBelow) {
@@ -369,7 +390,7 @@ async function showTooltipWindow(ownerWin, payload) {
     width: size.width,
     height: size.height,
   })
-  if (process.platform === 'darwin') tip.setAlwaysOnTop(true, 'floating')
+  applyAlwaysOnTop(tip, true)
   tip.showInactive()
 }
 
@@ -423,7 +444,7 @@ function createWidget(data) {
     backgroundColor: data.color,
     roundedCorners: false,
     resizable: true,
-    skipTaskbar: true,
+    skipTaskbar: SKIP_WIDGET_TASKBAR,
     hasShadow: false,
     maximizable: false,   // macOS "타이틀바 더블클릭→줌" OS 동작 방지
     minimizable: false,
@@ -435,10 +456,8 @@ function createWidget(data) {
     },
   })
 
-  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: false })
-  if (data.alwaysOnTop) {
-    win.setAlwaysOnTop(true, 'floating')
-  }
+  if (IS_MAC) win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: false })
+  if (data.alwaysOnTop) applyAlwaysOnTop(win, true)
   win.loadFile('widget.html')
 
   if (!app.isPackaged) {
@@ -524,19 +543,59 @@ function setupTray() {
     const buf = createTrayIconPNG()
     icon = nativeImage.createFromBuffer(buf, { scaleFactor: 2.0 })
   } else {
-    // 메뉴바 기준 논리 크기(16x16)로 맞추고, 소스가 @2x여도 동일 기준으로 렌더링한다.
-    icon = icon.resize({ width: 16, height: 16, quality: 'best' })
+    const traySize = IS_WIN ? 32 : 16
+    icon = icon.resize({ width: traySize, height: traySize, quality: 'best' })
   }
-  // 메뉴바 아이콘은 템플릿 처리해야 시스템 톤(라이트/다크)에 맞춰 표시된다.
-  icon.setTemplateImage(true)
+  if (IS_MAC) icon.setTemplateImage(true)
 
   tray = new Tray(icon)
-  tray.setToolTip('Desktop Todo')
+  tray.setToolTip('todoList-myfunfun')
   updateTrayMenu()
+
+  if (IS_WIN) {
+    tray.on('click', () => tray.popUpContextMenu())
+  }
 }
 
 function setupApplicationMenu() {
-  if (process.platform !== 'darwin') return
+  if (IS_WIN) {
+    Menu.setApplicationMenu(Menu.buildFromTemplate([
+      {
+        label: '파일',
+        submenu: [
+          { label: '새 메모 추가', accelerator: 'CmdOrCtrl+N', click: () => setImmediate(() => addNewWidget()) },
+          { label: '메모 목록', click: () => openMemoListWindow() },
+          { type: 'separator' },
+          { label: '사용 가이드', click: () => openGuideWindow() },
+          { type: 'separator' },
+          { label: '종료', accelerator: 'Alt+F4', role: 'quit' },
+        ],
+      },
+      {
+        label: '편집',
+        submenu: [
+          { role: 'undo' },
+          { role: 'redo' },
+          { type: 'separator' },
+          { role: 'cut' },
+          { role: 'copy' },
+          { role: 'paste' },
+          { role: 'selectAll' },
+        ],
+      },
+      {
+        label: '메모',
+        submenu: [
+          { label: '새 메모 추가', accelerator: 'CmdOrCtrl+N', click: () => setImmediate(() => addNewWidget()) },
+          { type: 'separator' },
+          { label: '메모 목록', click: () => openMemoListWindow() },
+        ],
+      },
+    ]))
+    return
+  }
+
+  if (!IS_MAC) return
 
   const template = [
     {
@@ -639,7 +698,7 @@ function openMemoListWindow() {
     resizable: false,
     minimizable: true,
     maximizable: false,
-    skipTaskbar: true,
+    skipTaskbar: SKIP_WIDGET_TASKBAR,
     hasShadow: true,
     show: false,
     backgroundColor: '#f5f5f7',
@@ -670,7 +729,7 @@ function openGuideWindow() {
     resizable: false,
     maximizable: false,
     minimizable: false,
-    skipTaskbar: true,
+    skipTaskbar: SKIP_WIDGET_TASKBAR,
     hasShadow: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -805,7 +864,7 @@ ipcMain.on('update-widget', (event, payload) => {
   const { id, ...fields } = payload
   Object.assign(state.data, fields)
   if ('alwaysOnTop' in fields) {
-    state.win.setAlwaysOnTop(fields.alwaysOnTop, 'floating')
+    applyAlwaysOnTop(state.win, fields.alwaysOnTop)
     state.win.webContents.send('external-always-on-top-update', fields.alwaysOnTop)
   }
   if ('collapsed' in fields) {
