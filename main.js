@@ -243,6 +243,15 @@ function closeTrayMenuWindow() {
   trayMenuPlaceAnchor = null
 }
 
+/** Windows: transparent 창은 메모(불투명) 아래로 깔릴 수 있음 → 트레이 메뉴만 최상위 레벨 */
+function raiseTrayMenuWindow() {
+  if (!trayMenuWin || trayMenuWin.isDestroyed()) return
+  applyAlwaysOnTop(trayMenuWin, true)
+  if (!trayMenuWin.isVisible()) trayMenuWin.show()
+  trayMenuWin.moveTop()
+  trayMenuWin.focus()
+}
+
 function placeTrayMenuWindow(menuHeight) {
   if (!trayMenuWin || trayMenuWin.isDestroyed() || !trayMenuPlaceAnchor) return
   const { anchor, trayBounds } = trayMenuPlaceAnchor
@@ -255,10 +264,7 @@ function placeTrayMenuWindow(menuHeight) {
   x = clamp(x, area.x + 4, area.x + area.width - TRAY_MENU_W - 4)
   y = clamp(y, area.y + 4, area.y + area.height - h - 4)
   trayMenuWin.setBounds({ x, y, width: TRAY_MENU_W, height: h })
-  if (!trayMenuWin.isVisible()) {
-    trayMenuWin.show()
-    trayMenuWin.focus()
-  }
+  raiseTrayMenuWindow()
 }
 
 function clamp(n, min, max) {
@@ -636,13 +642,16 @@ function popupTrayMenu() {
     width: TRAY_MENU_W,
     height: 220,
     frame: false,
-    transparent: true,
-    backgroundColor: '#00000000',
+    // Win: transparent 창은 sticky 메모보다 z-order가 낮아지는 경우가 많음
+    transparent: false,
+    backgroundColor: '#000000',
+    hasShadow: true,
     resizable: false,
     skipTaskbar: true,
     alwaysOnTop: true,
     show: false,
     focusable: true,
+    type: 'popup',
     webPreferences: {
       preload: path.join(__dirname, 'tray-menu-preload.js'),
       contextIsolation: true,
@@ -650,6 +659,7 @@ function popupTrayMenu() {
     },
   })
 
+  applyAlwaysOnTop(trayMenuWin, true)
   trayMenuWin.setVisibleOnAllWorkspaces(false)
   trayMenuWin.loadFile(path.join(__dirname, 'tray-menu.html'))
 

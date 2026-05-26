@@ -40,6 +40,10 @@
 
 ## 2026-05-26
 
+### Windows Phase 2 (트레이 메뉴 z-order)
+
+- 트레이 메뉴: `transparent: false`·`type: popup`·`screen-saver`+`moveTop` — 메모 창 아래 깔림 수정.
+
 ### Windows Phase 2 (트레이 메뉴·툴팁·목록 여백)
 
 - Windows 트레이: OS 기본 메뉴 대신 `tray-menu.*` 커스텀 패널(좁은 여백·다크 톤).
