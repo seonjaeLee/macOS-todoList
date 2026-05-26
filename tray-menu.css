@@ -1,0 +1,88 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+body {
+  font-family: Pretendard, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 11px;
+  line-height: 1.35;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.menu {
+  width: max-content;
+  min-width: 148px;
+  max-width: 200px;
+  margin: 0;
+  padding: 4px 0;
+  background: rgba(0, 0, 0, 0.82);
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 5px 10px;
+  font: inherit;
+  color: #fff;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.menu-item--check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.menu-check {
+  width: 14px;
+  flex-shrink: 0;
+  font-weight: 700;
+  text-align: right;
+  opacity: 0;
+}
+
+.menu-item--check.is-on .menu-check {
+  opacity: 1;
+}
+
+.menu-sep {
+  height: 1px;
+  margin: 4px 0;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.menu-item--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.menu-hint {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 400;
+  flex-shrink: 0;
+}

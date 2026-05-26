@@ -40,6 +40,12 @@
 
 ## 2026-05-26
 
+### Windows Phase 2 (트레이 메뉴·툴팁·목록 여백)
+
+- Windows 트레이: OS 기본 메뉴 대신 `tray-menu.*` 커스텀 패널(좁은 여백·다크 톤).
+- 툴팁: 전환 시 즉시 hide, 삭제·목록 갱신 시 잔류 제거.
+- 메모 목록: 여백 축소, `platform-win32` 추가 보정.
+
 ### Windows Phase 2 (1차 동작 수정, 테스트 대기)
 
 - 트레이: `setTemplateImage`는 mac만, win은 32px·좌클릭 메뉴.

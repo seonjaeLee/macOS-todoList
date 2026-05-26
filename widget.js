@@ -176,8 +176,13 @@ function onTooltipMouseEnter(e) {
   const text = el.getAttribute('data-tooltip')
   if (!text) return
 
+  if (tooltipHoverEl !== el) {
+    clearTimeout(tooltipTimer)
+    tooltipRequestId++
+    window.api.hideTooltip()
+  }
+
   tooltipHoverEl = el
-  clearTimeout(tooltipTimer)
   const requestId = ++tooltipRequestId
 
   tooltipTimer = setTimeout(() => {

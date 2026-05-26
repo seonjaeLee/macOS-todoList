@@ -51,6 +51,10 @@
       "memo-list.js",
       "guide.html",
       "tooltip.html",
+      "tray-menu.html",
+      "tray-menu.css",
+      "tray-menu.js",
+      "tray-menu-preload.js",
       "Delete_icon.png",
       "status_icon.png"
     ]

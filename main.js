@@ -162,6 +162,9 @@ function createTrayIconPNG() {
 // ───────────────────────────── 위젯 상태 ─────────────────────────────
 const widgetStates = new Map()
 let tray = null
+let trayMenuWin = null
+let trayMenuPlaceAnchor = null
+const TRAY_MENU_W = 168
 let listWin = null
 let allWidgetsHiddenMode = false
 
@@ -232,6 +235,30 @@ async function ensureTooltipPageReady() {
 function hideTooltipWindow() {
   if (tooltipWin && !tooltipWin.isDestroyed()) tooltipWin.hide()
   tooltipOwnerWin = null
+}
+
+function closeTrayMenuWindow() {
+  if (trayMenuWin && !trayMenuWin.isDestroyed()) trayMenuWin.close()
+  trayMenuWin = null
+  trayMenuPlaceAnchor = null
+}
+
+function placeTrayMenuWindow(menuHeight) {
+  if (!trayMenuWin || trayMenuWin.isDestroyed() || !trayMenuPlaceAnchor) return
+  const { anchor, trayBounds } = trayMenuPlaceAnchor
+  const h = Math.max(120, Math.min(320, Math.round(menuHeight)))
+  const display = screen.getDisplayNearestPoint(anchor)
+  const area = display.workArea
+  let x = anchor.x - Math.round(TRAY_MENU_W / 2)
+  let y = anchor.y - h - 6
+  if (y < area.y + 4) y = anchor.y + (trayBounds.height || 16) + 6
+  x = clamp(x, area.x + 4, area.x + area.width - TRAY_MENU_W - 4)
+  y = clamp(y, area.y + 4, area.y + area.height - h - 4)
+  trayMenuWin.setBounds({ x, y, width: TRAY_MENU_W, height: h })
+  if (!trayMenuWin.isVisible()) {
+    trayMenuWin.show()
+    trayMenuWin.focus()
+  }
 }
 
 function clamp(n, min, max) {
@@ -348,6 +375,7 @@ async function showTooltipWindow(ownerWin, payload) {
   if (typeof anchorLeft !== 'number' || typeof anchorTop !== 'number') return
 
   const tip = await ensureTooltipPageReady()
+  if (!tip.isDestroyed()) tip.hide()
   tooltipOwnerWin = ownerWin
 
   const ownerBounds = ownerWin.getBounds()
@@ -553,8 +581,83 @@ function setupTray() {
   updateTrayMenu()
 
   if (IS_WIN) {
-    tray.on('click', () => tray.popUpContextMenu())
+    tray.on('click', () => popupTrayMenu())
+    tray.on('right-click', () => popupTrayMenu())
   }
+}
+
+function getTrayMenuStatePayload() {
+  return {
+    allVisible: areAllVisible(),
+    openAtLogin: app.getLoginItemSettings().openAtLogin,
+  }
+}
+
+function handleTrayMenuAction(action) {
+  closeTrayMenuWindow()
+  switch (action) {
+    case 'add':
+      setImmediate(() => addNewWidget())
+      break
+    case 'list':
+      openMemoListWindow()
+      break
+    case 'toggle-all':
+      areAllVisible() ? hideAllWidgets() : showAllWidgets()
+      break
+    case 'login':
+      app.setLoginItemSettings({ openAtLogin: !app.getLoginItemSettings().openAtLogin })
+      updateTrayMenu()
+      break
+    case 'guide':
+      openGuideWindow()
+      break
+    case 'quit':
+      app.quit()
+      break
+    default:
+      break
+  }
+}
+
+function popupTrayMenu() {
+  if (!tray) return
+  hideTooltipWindow()
+  closeTrayMenuWindow()
+
+  const trayBounds = tray.getBounds()
+  const anchor = {
+    x: trayBounds.x + Math.round(trayBounds.width / 2),
+    y: trayBounds.y,
+  }
+  trayMenuPlaceAnchor = { anchor, trayBounds }
+
+  trayMenuWin = new BrowserWindow({
+    width: TRAY_MENU_W,
+    height: 220,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    show: false,
+    focusable: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'tray-menu-preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  })
+
+  trayMenuWin.setVisibleOnAllWorkspaces(false)
+  trayMenuWin.loadFile(path.join(__dirname, 'tray-menu.html'))
+
+  trayMenuWin.on('blur', () => closeTrayMenuWindow())
+  trayMenuWin.on('closed', () => {
+    trayMenuWin = null
+    trayMenuPlaceAnchor = null
+  })
 }
 
 function setupApplicationMenu() {
@@ -641,6 +744,13 @@ function setupApplicationMenu() {
 
 function updateTrayMenu() {
   if (!tray) return
+
+  if (IS_WIN) {
+    if (trayMenuWin && !trayMenuWin.isDestroyed()) {
+      trayMenuWin.webContents.send('tray-menu-refresh')
+    }
+    return
+  }
 
   const isLoginItem = app.getLoginItemSettings().openAtLogin
   const allVisible = areAllVisible()
@@ -915,10 +1025,27 @@ ipcMain.handle('get-window-bounds', (event) => {
   return win && !win.isDestroyed() ? win.getBounds() : null
 })
 
+ipcMain.handle('tray-menu-get-state', () => getTrayMenuStatePayload())
+
+ipcMain.on('tray-menu-action', (_event, action) => {
+  handleTrayMenuAction(action)
+})
+
+ipcMain.on('tray-menu-close', () => {
+  closeTrayMenuWindow()
+})
+
+ipcMain.on('tray-menu-resize', (event, height) => {
+  if (!trayMenuWin || trayMenuWin.isDestroyed()) return
+  if (event.sender !== trayMenuWin.webContents) return
+  placeTrayMenuWindow(height)
+})
+
 ipcMain.on('show-tooltip', async (event, payload) => {
   const win = BrowserWindow.fromWebContents(event.sender)
   if (!win || win.isDestroyed()) return
   try {
+    hideTooltipWindow()
     await showTooltipWindow(win, payload)
   } catch (e) {
     console.error('툴팁 표시 실패:', e)
@@ -996,6 +1123,7 @@ ipcMain.handle('rename-widget-title', (_event, payload) => {
 })
 
 ipcMain.handle('delete-widget-by-id', (_event, widgetId) => {
+  hideTooltipWindow()
   const state = widgetStates.get(widgetId)
   if (!state) return false
   if (!state.win.isDestroyed()) state.win.close()

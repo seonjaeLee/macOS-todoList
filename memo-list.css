@@ -31,7 +31,7 @@ body {
   -webkit-app-region: drag;
   background: #fff;
   border-bottom: 1px solid #e0e0e0;
-  padding: 14px 20px 12px;
+  padding: 12px 14px 10px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -74,9 +74,9 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   overflow-y: scroll;
-  padding: 20px;
+  padding: 14px 16px;
 }
 
 .content::-webkit-scrollbar {
@@ -118,9 +118,9 @@ body {
 .item {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  padding: 10px 14px;
+  padding: 8px 10px;
   border-bottom: 1px solid #f2f2f7;
 }
 
@@ -169,8 +169,8 @@ body {
 .btn-icon-delete {
   border: none;
   background: transparent;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
@@ -221,8 +221,8 @@ body {
 .btn-icon-float {
   border: none;
   background: transparent;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   margin-top: 0;
   border-radius: 50%;
   cursor: pointer;
@@ -248,8 +248,8 @@ body {
 }
 
 .btn-icon-float svg {
-  width: 17px;
-  height: 17px;
+  width: 15px;
+  height: 15px;
   display: block;
   flex-shrink: 0;
   stroke: currentColor;
@@ -258,4 +258,33 @@ body {
   stroke-linecap: round;
   stroke-linejoin: round;
   transition: fill 0.15s, stroke 0.15s;
+}
+
+body.platform-win32 .content {
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+body.platform-win32 .titlebar {
+  padding: 10px 12px 8px;
+}
+
+body.platform-win32 .item {
+  padding: 7px 8px;
+  gap: 5px;
+}
+
+body.platform-win32 .item-main {
+  gap: 6px;
+}
+
+body.platform-win32 .btn-icon-delete,
+body.platform-win32 .btn-icon-float {
+  width: 24px;
+  height: 24px;
+}
+
+body.platform-win32 .btn-icon-delete img {
+  width: 18px;
+  height: 18px;
 }

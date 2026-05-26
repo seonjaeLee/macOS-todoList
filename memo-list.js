@@ -14,8 +14,13 @@ function onTooltipMouseEnter(e) {
   const text = el.getAttribute('data-tooltip')
   if (!text) return
 
+  if (tooltipHoverEl !== el) {
+    clearTimeout(tooltipTimer)
+    tooltipRequestId++
+    window.api.hideTooltip()
+  }
+
   tooltipHoverEl = el
-  clearTimeout(tooltipTimer)
   const requestId = ++tooltipRequestId
 
   tooltipTimer = setTimeout(() => {
@@ -76,6 +81,9 @@ function getSlightlyDarkerColor(hexColor, amount = 0.14) {
 }
 
 async function renderList() {
+  tooltipHoverEl = null
+  clearTimeout(tooltipTimer)
+  tooltipRequestId++
   window.api.hideTooltip()
   const widgets = await window.api.getWidgetList()
   $list.innerHTML = ''
@@ -170,6 +178,10 @@ async function renderList() {
     btnDelete.addEventListener('click', async () => {
       const ok = window.confirm('이 메모를 삭제할까요?')
       if (!ok) return
+      tooltipHoverEl = null
+      clearTimeout(tooltipTimer)
+      tooltipRequestId++
+      window.api.hideTooltip()
       await window.api.deleteWidgetById(widget.id)
       await renderList()
     })
@@ -188,5 +200,9 @@ async function renderList() {
 window.api.onWidgetListUpdated(() => {
   renderList()
 })
+
+if (window.api.getPlatform?.() === 'win32') {
+  document.body.classList.add('platform-win32')
+}
 
 renderList()
