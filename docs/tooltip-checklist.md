@@ -6,18 +6,19 @@
 
 | 파일 | 역할 |
 |------|------|
-| `widget.js` | `[data-tooltip]` 호버 → IPC payload (`anchorLeft`, `anchorTop`, `text`, `preferBelow`) |
+| `widget.js` | 메모 `[data-tooltip]` 호버 → IPC (`preferBelow: false` 타이틀바) |
+| `memo-list.js` | 목록 `[data-tooltip]` 호버 → 동일 IPC (`preferBelow: false`, 아이콘 위) |
 | `preload.js` | `showTooltip` / `hideTooltip` / `getWindowBounds` 노출 |
 | `main.js` | 공유 `tooltipWin` 생성, 측정(`layoutTooltipContent`), 화면 좌표 배치 |
 | `tooltip.html` | 말풍선 DOM·스타일 (별도 panel 창에 로드) |
 
-`widget.css`의 `.widget [data-tooltip]::before`는 **비활성**(`content: none`)입니다. 메모 창은 panel 툴팁만 사용합니다. 메모 목록(`memo-list.css`)은 CSS `::before` 툴팁을 유지합니다.
+`widget.css`·`memo-list.css`의 `[data-tooltip]::before`는 **비활성**입니다. 메모·메모 목록 모두 panel 툴팁만 사용합니다.
 
 ---
 
 ## 수정 전
 
-- [ ] **어느 창**을 고치는지 정했는가? (메모 `widget` / 메모 목록 `memo-list` — 목록은 아직 CSS `::before` 툴팁일 수 있음)
+- [ ] **어느 창**을 고치는지 정했는가? (메모 `widget` / 메모 목록 `memo-list`)
 - [ ] `npm start`로 먼저 확인할지, `npm run build` 후 `/Applications`로 확인할지 정했는가?
 
 ---

@@ -143,7 +143,7 @@ window.api.onInitWidget((data) => {
 
   $colorInput.value = data.color
   $memoDesc.value = data.desc || ''
-  requestAnimationFrame(resizeDesc)
+  if (!data.collapsed) scheduleResizeDesc()
 
   if (data.collapsed) {
     $widget.classList.add('collapsed')
@@ -272,6 +272,44 @@ function renderTitle(text) {
   }
 }
 
+function exitTitleEditMode() {
+  $title.contentEditable = 'false'
+  $title.scrollLeft = 0
+}
+
+function handleClipboardShortcut(e, target) {
+  if (!(e.metaKey || e.ctrlKey) || e.altKey) return false
+  const key = e.key.toLowerCase()
+  if (key === 'a') return false
+
+  const isTextControl = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
+
+  if (key === 'c' || key === 'x') {
+    document.execCommand(key === 'c' ? 'copy' : 'cut')
+    e.preventDefault()
+    return true
+  }
+
+  if (key === 'v') {
+    e.preventDefault()
+    navigator.clipboard.readText().then((text) => {
+      if (!text) return
+      if (isTextControl) {
+        const start = target.selectionStart ?? target.value.length
+        const end = target.selectionEnd ?? start
+        target.value = target.value.slice(0, start) + text + target.value.slice(end)
+        const pos = start + text.length
+        target.selectionStart = target.selectionEnd = pos
+      } else {
+        document.execCommand('insertText', false, text)
+      }
+    }).catch(() => {})
+    return true
+  }
+
+  return false
+}
+
 function enterTitleEditMode() {
   if ($title.contentEditable === 'true') return
   $title.contentEditable = 'true'
@@ -281,6 +319,10 @@ function enterTitleEditMode() {
   }
   $title.focus()
 }
+
+$title.addEventListener('mousedown', (e) => {
+  e.stopPropagation()
+})
 
 $title.addEventListener('click', (e) => {
   e.stopPropagation()
@@ -304,21 +346,24 @@ window.api.onExternalAlwaysOnTopUpdate((value) => {
 })
 
 $title.addEventListener('keydown', (e) => {
+  if (handleClipboardShortcut(e, $title)) return
   if (e.key === 'Enter') { e.preventDefault(); $title.blur() }
   if (e.key === 'Escape') {
     renderTitle(widgetData.title)
-    $title.contentEditable = 'false'
-    $title.scrollLeft = 0
+    exitTitleEditMode()
+  }
+  if ($title.contentEditable === 'true' && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
+    e.preventDefault()
+    document.execCommand('selectAll')
   }
 })
 
 $title.addEventListener('blur', () => {
-  $title.contentEditable = 'false'
-  $title.scrollLeft = 0
   const newTitle = $title.textContent.trim()
   widgetData.title = newTitle
   renderTitle(newTitle)
   sync({ title: newTitle })
+  exitTitleEditMode()
 })
 
 // ───────────────────────────── 접기/펼치기 (▾ 버튼 클릭) ─────────────────────────────
@@ -333,6 +378,7 @@ function toggleCollapse() {
   widgetData.collapsed = !widgetData.collapsed
   $widget.classList.toggle('collapsed', widgetData.collapsed)
   if (widgetData.collapsed) closeAllMenus()
+  else scheduleResizeDesc()
   sync({ collapsed: widgetData.collapsed })
 }
 
@@ -438,6 +484,7 @@ function addTodo() {
 $btnAddTodo.addEventListener('click', addTodo)
 
 $newTodo.addEventListener('keydown', (e) => {
+  if (handleClipboardShortcut(e, $newTodo)) return
   if (e.key === 'Enter' && !e.isComposing) addTodo()
 })
 
@@ -522,10 +569,18 @@ $colorInput.addEventListener('change', (e) => {
 })
 
 function resizeDesc() {
+  if ($widget.classList.contains('collapsed')) return
   $memoDesc.style.height = '1px'
   const full = $memoDesc.scrollHeight
   $memoDesc.style.height = Math.min(full, 140) + 'px'
   $memoDesc.style.overflowY = full > 140 ? 'auto' : 'hidden'
+}
+
+function scheduleResizeDesc() {
+  if ($widget.classList.contains('collapsed')) return
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => resizeDesc())
+  })
 }
 
 $memoDesc.addEventListener('input', () => {

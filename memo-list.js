@@ -3,6 +3,58 @@ const $btnClose = document.getElementById('btn-close')
 
 $btnClose.addEventListener('click', () => window.close())
 
+/** macOS 스타일 panel 툴팁 (메모 위젯·main.js 공유) */
+const TOOLTIP_DELAY_MS = 400
+let tooltipTimer = null
+let tooltipHoverEl = null
+let tooltipRequestId = 0
+
+function onTooltipMouseEnter(e) {
+  const el = e.currentTarget
+  const text = el.getAttribute('data-tooltip')
+  if (!text) return
+
+  tooltipHoverEl = el
+  clearTimeout(tooltipTimer)
+  const requestId = ++tooltipRequestId
+
+  tooltipTimer = setTimeout(() => {
+    if (tooltipHoverEl !== el || requestId !== tooltipRequestId) return
+    showNativeTooltipFor(el, text, requestId)
+  }, TOOLTIP_DELAY_MS)
+}
+
+function onTooltipMouseLeave(e) {
+  const el = e.currentTarget
+  if (tooltipHoverEl === el) tooltipHoverEl = null
+  clearTimeout(tooltipTimer)
+  tooltipRequestId++
+  window.api.hideTooltip()
+}
+
+async function showNativeTooltipFor(el, text, requestId) {
+  if (requestId !== tooltipRequestId || tooltipHoverEl !== el) return
+
+  const rect = el.getBoundingClientRect()
+  if (!rect.width || !rect.height) return
+
+  window.api.showTooltip({
+    anchorLeft: rect.left,
+    anchorTop: rect.top,
+    anchorWidth: rect.width,
+    anchorHeight: rect.height,
+    text,
+    preferBelow: false,
+  })
+}
+
+function bindPanelTooltips(root) {
+  root.querySelectorAll('[data-tooltip]').forEach((el) => {
+    el.addEventListener('mouseenter', onTooltipMouseEnter)
+    el.addEventListener('mouseleave', onTooltipMouseLeave)
+  })
+}
+
 function toHexChannel(value) {
   return value.toString(16).padStart(2, '0')
 }
@@ -24,6 +76,7 @@ function getSlightlyDarkerColor(hexColor, amount = 0.14) {
 }
 
 async function renderList() {
+  window.api.hideTooltip()
   const widgets = await window.api.getWidgetList()
   $list.innerHTML = ''
 
@@ -111,9 +164,9 @@ async function renderList() {
 
     const btnDelete = document.createElement('button')
     btnDelete.className = 'btn-icon-delete'
-    btnDelete.innerHTML = '<img src="Delete_icon.png" alt="" />'
-    btnDelete.title = '삭제'
+    btnDelete.setAttribute('data-tooltip', '삭제')
     btnDelete.setAttribute('aria-label', '삭제')
+    btnDelete.innerHTML = '<img src="Delete_icon.png" alt="" />'
     btnDelete.addEventListener('click', async () => {
       const ok = window.confirm('이 메모를 삭제할까요?')
       if (!ok) return
@@ -128,6 +181,8 @@ async function renderList() {
     item.appendChild(actions)
     $list.appendChild(item)
   })
+
+  bindPanelTooltips($list)
 }
 
 window.api.onWidgetListUpdated(() => {

@@ -162,6 +162,7 @@ body {
 
 .item-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
 }
 
@@ -209,76 +210,52 @@ body {
   border-top: 1px solid #e5e5ea;
 }
 
-/* macOS Electron(frameless): HTML title 대신 CSS 툴팁 */
-[data-tooltip] {
-  position: relative;
-}
-
+/* 툴팁: panel 창(memo-list.js → main.js tooltip.html) — CSS 가상 요소 미사용 */
 [data-tooltip]::before {
-  content: attr(data-tooltip);
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 8px;
-  font-size: 11px;
-  line-height: 1.35;
-  white-space: nowrap;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.82);
-  border-radius: 4px;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.12s ease, visibility 0.12s ease;
-  transition-delay: 0s;
-  z-index: 200;
-  font-family: Pretendard, -apple-system, 'Helvetica Neue', sans-serif;
-}
-
-[data-tooltip]:hover::before,
-[data-tooltip]:focus-visible::before {
-  opacity: 1;
-  visibility: visible;
-  transition-delay: 0.4s;
+  content: none !important;
+  display: none !important;
 }
 
 /* ── 항상 위에 띄우기 (열기구) 목록 버튼 ── */
+/* 열기구 색·상태: 메모 타이틀바 .btn-float / .svg-float 와 동일 */
 .btn-icon-float {
   border: none;
   background: transparent;
   width: 30px;
   height: 30px;
+  margin-top: 0;
   border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, color 0.15s, transform 0.15s;
-  color: #aeaeb2;
+  transition: background 0.15s, color 0.15s, fill 0.15s, stroke 0.15s;
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .btn-icon-float:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: #1d1d1f;
-  transform: translateY(-2px);
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.85);
 }
 
 .btn-icon-float.active {
-  color: #007aff; /* macOS 테마 블루 강조 */
-  transform: translateY(-2px);
+  color: rgba(0, 0, 0, 0.75);
 }
 
 .btn-icon-float.active svg {
-  fill: currentColor;
+  fill: rgba(0, 0, 0, 0.7);
+  stroke: rgba(0, 0, 0, 0.7);
 }
 
 .btn-icon-float svg {
-  width: 14px;
-  height: 14px;
+  width: 17px;
+  height: 17px;
+  display: block;
+  flex-shrink: 0;
   stroke: currentColor;
   stroke-width: 2;
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
+  transition: fill 0.15s, stroke 0.15s;
 }

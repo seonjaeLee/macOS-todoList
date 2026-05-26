@@ -160,6 +160,9 @@ const COLORS = ['#FFF176', '#FFD54F', '#80DEEA', '#EF9A9A', '#CE93D8', '#A5D6A7'
 const WIDGET_W = 260
 const WIDGET_H_EXPANDED = 340
 const WIDGET_H_COLLAPSED = 44
+const COLUMN_GAP = 1
+// x 구간 겹침이 아니라 중심 X로 열 판정 (두 시각적 열이 한 열로 묶이는 것 방지)
+const COLUMN_X_CENTER_THRESHOLD = 80
 
 // ───────────────────────────── macOS 스타일 공유 툴팁 창 (메모 창 밖에 표시) ─────────────────────────────
 let tooltipWin = null
@@ -549,6 +552,18 @@ function setupApplicationMenu() {
       ],
     },
     {
+      label: '편집',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+      ],
+    },
+    {
       label: '메모',
       submenu: [
         {
@@ -635,6 +650,7 @@ function openMemoListWindow() {
     },
   })
   listWin.loadFile('memo-list.html')
+  bindTooltipOwnerCleanup(listWin)
   listWin.once('ready-to-show', () => listWin.show())
   listWin.on('closed', () => { listWin = null })
 }
@@ -690,36 +706,97 @@ function addNewWidget() {
 // setImmediate로 IPC 콜스택 밖에서 생성 → V8 assertion 크래시 방지
 ipcMain.on('create-widget', () => setImmediate(() => addNewWidget()))
 
+// 재정렬·간격 계산용 높이 (접기 직후 getBounds가 아직 펼친 높이일 수 있음)
+function getWidgetLayoutHeight(state) {
+  if (state.data.collapsed) return WIDGET_H_COLLAPSED
+  return state.data.expandedHeight ?? WIDGET_H_EXPANDED
+}
+
+function getWidgetCenterX(bounds) {
+  return bounds.x + bounds.width / 2
+}
+
+function collectReflowWidgets() {
+  return [...widgetStates.entries()]
+    .filter(([, s]) => !s.win.isDestroyed() && !s.data.hidden)
+    .map(([id, s]) => {
+      const b = s.win.getBounds()
+      return { id, s, b, layoutH: getWidgetLayoutHeight(s) }
+    })
+}
+
+function getColumnMembersByCenterX(anchorBounds, all) {
+  const anchorCx = getWidgetCenterX(anchorBounds)
+  return all
+    .filter((w) => Math.abs(getWidgetCenterX(w.b) - anchorCx) <= COLUMN_X_CENTER_THRESHOLD)
+    .sort((a, b) => a.b.y - b.b.y)
+}
+
+function clusterWidgetsByColumn(all) {
+  const sorted = [...all].sort((a, b) => getWidgetCenterX(a.b) - getWidgetCenterX(b.b))
+  if (!sorted.length) return []
+  const clusters = [[sorted[0]]]
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1]
+    const cur = sorted[i]
+    if (Math.abs(getWidgetCenterX(cur.b) - getWidgetCenterX(prev.b)) <= COLUMN_X_CENTER_THRESHOLD) {
+      clusters[clusters.length - 1].push(cur)
+    } else {
+      clusters.push([cur])
+    }
+  }
+  return clusters
+}
+
 // ── 같은 열의 위젯들을 빈틈 없이 재정렬 ──
 function reflowColumn(changedId) {
-  const all = [...widgetStates.entries()]
-    .filter(([, s]) => !s.win.isDestroyed())
-    .map(([id, s]) => ({ id, s, b: s.win.getBounds() }))
+  const anchorState = widgetStates.get(changedId)
+  if (!anchorState || anchorState.win.isDestroyed()) return
 
-  const anchor = all.find((w) => w.id === changedId)
-  if (!anchor) return
-
-  // x 범위가 겹치는 위젯을 같은 열로 간주
-  const aL = anchor.b.x, aR = anchor.b.x + anchor.b.width
-  const col = all
-    .filter((w) => Math.max(aL, w.b.x) < Math.min(aR, w.b.x + w.b.width))
-    .sort((a, b) => a.b.y - b.b.y)
-
+  const visible = collectReflowWidgets()
+  const col = getColumnMembersByCenterX(anchorState.win.getBounds(), visible)
   if (col.length <= 1) return
 
-  const GAP = 6
   let nextY = col[0].b.y   // 첫 번째 위젯의 위치는 고정
 
   for (const w of col) {
     const targetY = Math.round(nextY)
-    if (Math.abs(w.b.y - targetY) > 1) {
-      w.s.win.setBounds({ x: w.b.x, y: targetY, width: w.b.width, height: w.b.height })
+    const layoutH = w.layoutH
+    if (Math.abs(w.b.y - targetY) > 1 || Math.abs(w.b.height - layoutH) > 1) {
+      w.s.win.setBounds({ x: w.b.x, y: targetY, width: w.b.width, height: layoutH })
       w.s.data.y = targetY
+      if (!w.s.data.collapsed) w.s.data.expandedHeight = layoutH
     }
-    nextY += w.b.height + GAP
+    nextY += layoutH + COLUMN_GAP
   }
 
   persistAll()
+}
+
+function scheduleColumnReflow(widgetId) {
+  const state = widgetStates.get(widgetId)
+  if (!state || state.win.isDestroyed()) return
+
+  const win = state.win
+  let finished = false
+  const finish = () => {
+    if (finished) return
+    finished = true
+    clearTimeout(timer)
+    win.removeListener('resized', onResized)
+    reflowColumn(widgetId)
+  }
+  const onResized = () => finish()
+  const timer = setTimeout(finish, 50)
+  win.once('resized', onResized)
+}
+
+function reflowAllColumnsOnStartup() {
+  const visible = collectReflowWidgets()
+  if (visible.length <= 1) return
+  for (const col of clusterWidgetsByColumn(visible)) {
+    if (col.length > 1) reflowColumn(col[0].id)
+  }
 }
 
 ipcMain.on('update-widget', (event, payload) => {
@@ -734,14 +811,13 @@ ipcMain.on('update-widget', (event, payload) => {
   if ('collapsed' in fields) {
     const { x, y, width, height } = state.win.getBounds()
     if (fields.collapsed) {
-      state.data.expandedHeight = height  // 현재 높이 저장
+      if (height > WIDGET_H_COLLAPSED) state.data.expandedHeight = height
       state.win.setBounds({ x, y, width, height: WIDGET_H_COLLAPSED })
     } else {
       const expandedH = state.data.expandedHeight ?? WIDGET_H_EXPANDED
       state.win.setBounds({ x, y, width, height: expandedH })
     }
-    // 높이 변경 후 같은 열 위젯들 재정렬
-    setImmediate(() => reflowColumn(id))
+    scheduleColumnReflow(id)
   }
   if ('title' in fields) updateTrayMenu()
   persistAll()
@@ -752,11 +828,17 @@ ipcMain.on('update-widget', (event, payload) => {
 ipcMain.on('hide-widget', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender)
   if (win && !win.isDestroyed()) {
-    win.hide()
-    for (const [, state] of widgetStates) {
-      if (state.win === win) { state.data.hidden = true; break }
+    let widgetId = null
+    for (const [id, state] of widgetStates) {
+      if (state.win === win) {
+        widgetId = id
+        state.data.hidden = true
+        break
+      }
     }
+    win.hide()
     persistAll()
+    if (widgetId) scheduleColumnReflow(widgetId)
   }
   updateTrayMenu()
   notifyWidgetListUpdated()
@@ -894,6 +976,9 @@ app.whenReady().then(() => {
     }]
   }
   savedWidgets.forEach((data) => createWidget(data))
+  if (savedWidgets.length > 1) {
+    setTimeout(() => reflowAllColumnsOnStartup(), 150)
+  }
 })
 
 app.on('window-all-closed', () => { /* 트레이 앱 유지 */ })

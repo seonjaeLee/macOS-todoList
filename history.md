@@ -40,6 +40,39 @@
 
 ## 2026-05-26
 
+**v1.1.0 배포 준비** — 공개 릴리스 문구: `docs/release-notes-v1.1.0.md`, `public-release-work/releases/v1.1.0.md`
+
+### 메모 열 정렬 (`main.js`)
+
+- 접기/펼치기 후 아래 메모 간격이 복구되지 않던 문제 수정:
+  - `getWidgetLayoutHeight` — `collapsed`/`expandedHeight` 기준 높이 계산(접은 직후 `getBounds` 지연 대응).
+  - `scheduleColumnReflow` — `resized` + 50ms 폴백 후 `reflowColumn`.
+  - 앱 시작 시 `reflowAllColumnsOnStartup` — 저장된 y 간격 복구.
+  - 같은 열 메모 간격 `COLUMN_GAP = 1`px.
+- 재정렬 보강:
+  - 열 판정: x 구간 겹침 → **창 중심 X** (`COLUMN_X_CENTER_THRESHOLD = 80`) — 좌·우 두 열이 한꺼번에 묶이며 간격이 깨지던 문제.
+  - **숨긴 메모** reflow 제외(펼친 채 ✕ 숨김 시 유령 간격 방지).
+  - 메모 **닫기(숨기기)** 후 같은 열 재정렬.
+
+### UI (`widget.css`)
+
+- **더보기(⋯) 메뉴** — 우클릭·툴팁과 동일 스타일로 통일, 로컬 검증 완료:
+  - 밝은 흰 패널 → 다크 톤(`rgba(0,0,0,0.82)`, 흰 글자·삭제 `#ff8f8f`·활성 체크 흰색).
+  - 더보기·우클릭 **동일 메뉴**로 `width: max-content`, 패널 `font-size: 11px`·항목 `font: inherit` (`min-width: 168px`·항목별 flex 차이 제거).
+  - 호버 배경이 메뉴 전체 너비에 맞도록 정리.
+
+### 메모 편집 UX (`widget.js`, `widget.css`, `main.js`)
+
+- **개요**(`memo-desc`): 접힌 상태에서 높이 오측정 → `scheduleResizeDesc`로 펼칠 때만 재측정(최대 140px, 초과 시 스크롤). 로컬 검증 완료.
+- **제목**: 편집 시 `user-select: text`, `mousedown` 전파 차단, `⌘A` 전체 선택.
+- **제목·할 일 추가 입력창** 복사/붙여넣기:
+  - macOS 메뉴 **편집** 역할(잘라내기·복사·붙여넣기·전체 선택).
+  - `handleClipboardShortcut` — 제목·`#new-todo`에서 `⌘C`/`⌘V`/`⌘X` 보조.
+  - `.new-todo`: `user-select: text`, `-webkit-app-region: no-drag`.
+  - 백업: `backups/20260526-clipboard/`. 로컬 검증 완료.
+
+### v1.1.0 기능·문서·개발 환경
+
 - 타이틀바 UI 정리:
   - **좁은 창**(기본): 타이틀바에 `⋯` 더보기·`✕` 닫기만 표시. 메모 추가·색상·항상 위에 띄우기는 더보기 메뉴 또는 **⌘N** / 트레이 메뉴.
   - **넓은 창**(`titlebar-expanded`): 열기구·`＋`·색상환을 타이틀바에 펼침, `⋯` 숨김.
@@ -60,7 +93,7 @@
     - 가이드에 열기구 SVG 인라인, **메모 목록에서 항상 위에 띄우기** 항목.
   - 툴팁:
     - 메모 타이틀바: `data-tooltip` + 별도 panel 창(`tooltip.html`, `widget.js` → `main.js`). CSS `::before`는 비활성(색상환 `::after` 도넛과 분리).
-    - 메모 목록: CSS `[data-tooltip]::before` 유지.
+    - 메모 목록: panel 툴팁(`memo-list.js`, 메모와 동일 `preferBelow: false` — 아이콘 위). 메모 `✕` 닫기 툴팁 제거.
     - 메모 타이틀바 문구: `메모지 색상 변경` · `메모추가` · `항상 위에 띄우기` · `더보기` · `닫기`.
   - 릴리스: `docs/release-notes-v1.1.0.md`, `package.json` `1.1.0`.
 - 개발 문서 정리: `current_task.md`·`history.md`·`docs/*` 오타·타이틀바·툴팁·배포 절차를 코드 기준으로 통일.
