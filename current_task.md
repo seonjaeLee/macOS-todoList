@@ -1,13 +1,18 @@
 # 예정 작업
 
-- **Windows 포팅** — `docs/windows-port.md` Phase 1: `build:win`·Actions 워크플로 추가됨 → **GitHub Actions에서 exe 빌드·Windows에서 실행 확인** 남음
+- **Windows 포팅 (이어서)** — `docs/windows-port.md` 참고
+  - [ ] Actions `3f4b52d` exe → **트레이 메뉴가 메모 위에** 표시되는지 재확인
+  - [ ] 항상 위·툴팁·목록 여백·종료 경로 최종 체크
+  - [ ] Phase 2 잔여: `widget.js` Ctrl 단축키, `scripts/start-dev` Windows 경로
+  - [ ] Phase 3: `guide.html` Windows 안내, v1.2.0 릴리스 문서·공개 Release
 - 메모 백업 기능 추가 예정
 
 # 완료·진행 중
 
 - v1.0.0 1차 dmg 공개 배포 완료
-- v1.1.0 기능 개발 완료 (`package.json` `1.1.0`, 항상 위에 띄우기·가이드·툴팁) — `history.md` 2026-05-26 참고
-- v1.1.0 GitHub Release·dmg 업로드 — `docs/release-notes-v1.1.0.md` 초안 기준, `npm run build:release` 후 `public-release-work` 반영 (`docs/release.md`)
+- v1.1.0 mac — 기능·dmg Release 완료 (`history.md` 2026-05-26)
+- **Windows Phase 1** — Actions 빌드·exe 실행·메모 UI 기본 동작 확인(집 PC)
+- **Windows Phase 2** — 1~2차 피드백 반영 커밋 완료; **z-order(`3f4b52d`)는 아직 집 PC 재테스트 전**
 
 # 절대 수정 금지
 

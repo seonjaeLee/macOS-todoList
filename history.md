@@ -40,30 +40,51 @@
 
 ## 2026-05-26
 
-### Windows Phase 2 (트레이 메뉴 z-order)
+### Windows 포팅 · 집 PC 테스트 (세션 마무리)
 
-- 트레이 메뉴: `transparent: false`·`type: popup`·`screen-saver`+`moveTop` — 메모 창 아래 깔림 수정.
+**맥(개발)** — `npm start`로 mac 개발 유지. Windows exe는 **GitHub Actions `Build Windows`** 로만 빌드(Mac 로컬 `build:win`은 느리고 권한 이슈 있어 사용 안 함).
 
-### Windows Phase 2 (트레이 메뉴·툴팁·목록 여백)
+**Phase 1 — 빌드** (`212d3e3`)
 
-- Windows 트레이: OS 기본 메뉴 대신 `tray-menu.*` 커스텀 패널(좁은 여백·다크 톤).
-- 툴팁: 전환 시 즉시 hide, 삭제·목록 갱신 시 잔류 제거.
-- 메모 목록: 여백 축소, `platform-win32` 추가 보정.
+- `docs/windows-port.md`, `build:win`, `generate-win-icon.js`, Actions 워크플로.
+- Actions #1 성공(약 3분 28초), Artifacts `todoList-myfunfun-win-x64` → portable exe 확인.
+- 집 Windows PC: GitHub 로그인 후 Actions에서 exe 재다운로드( Mac→USB 옮길 필요 없음).
 
-### Windows Phase 2 (1차 동작 수정, 테스트 대기)
+**Phase 2 — 1차 집 PC 테스트 피드백** (`5866cc6`)
 
-- 트레이: `setTemplateImage`는 mac만, win은 32px·좌클릭 메뉴.
-- 항상 위: win `screen-saver` 레벨 (`applyAlwaysOnTop`).
-- 작업 표시줄: win 메모·목록·가이드 `skipTaskbar: false`, `AppUserModelId`, exe 아이콘(`signAndEditExecutable: true`).
-- 메뉴: win **파일**(가이드·메모 목록·종료 Alt+F4)·편집·메모.
-- UI: `body.platform-win32` 타이틀바·＋ 크기 축소.
+| 항목 | 결과 |
+|------|------|
+| 항상 위 | 설정해도 다른 앱 위로 안 올라옴 → `applyAlwaysOnTop` + win `screen-saver` |
+| 작업표시줄·트레이 | 아이콘·메뉴 없음 → win 트레이 32px, `skipTaskbar: false`, 파일 메뉴·종료 |
+| 종료·가이드·목록 | 없음 → 트레이·**파일** 메뉴(Alt+F4 종료) |
+| 작업 관리자 | Electron 이름 → `AppUserModelId`, `signAndEditExecutable: true` |
+| 타이틀바 ＋ | 너무 큼 → `platform-win32` CSS 축소 |
+| 작업표시줄 아이콘 | **정상** |
 
-### Windows 포팅 Phase 1 (빌드 인프라)
+**Phase 2 — 2차 집 PC 테스트 피드백** (`aff15d2`)
 
-- `docs/windows-port.md` — 단일 레포·Phase 0~4 계획.
-- `package.json` — `build:win` / `build:win:dir` / `icons:win`, portable x64, `png-to-ico`.
-- `scripts/generate-win-icon.js`, `.github/workflows/build-windows.yml` (Actions → exe 아티팩트).
-- CI용 `build/icon.png`만 git 추적 (`.gitignore` 예외).
+| 항목 | 결과 |
+|------|------|
+| 트레이 메뉴 | OS 기본 메뉴 너무 넓·여백 불일치 → `tray-menu.*` 커스텀 다크 메뉴 |
+| 툴팁 | 깜빡임·삭제 후 잔류 → hover 전환 시 즉시 hide, 삭제/목록 갱신 시 정리 |
+| 목록 여백 | 너무 넓음 → `memo-list.css`·`platform-win32` 축소, 푸터 `macOS 전용` 문구 제거 |
+
+**Phase 2 — 3차 (미재테스트)** (`3f4b52d`)
+
+- 트레이 메뉴가 **메모 창 아래** 깔림 → `transparent: false`, `type: popup`, `screen-saver` + `moveTop()`.
+- **다음에 할 일:** Actions `3f4b52d` 빌드 후 exe로 트레이 메뉴가 메모 **위**에 뜨는지 재확인.
+
+**관련 커밋 (최신순)**
+
+- `3f4b52d` fix: 트레이 메뉴 z-order
+- `aff15d2` fix: 트레이 커스텀 메뉴·툴팁·목록 여백
+- `5866cc6` fix: 트레이·작업표시줄·항상 위·메뉴·타이틀바
+- `212d3e3` feat: Windows portable 빌드·Actions (Phase 1)
+
+**버전·릴리스 (합의)**
+
+- mac **1.1.0** 유지( dmg 배포 완료).
+- Windows 첫 공개는 **1.2.0**에 dmg + exe 묶음 예정 (`docs/windows-port.md`).
 
 **v1.1.0 배포 준비** — 공개 릴리스 문구: `docs/release-notes-v1.1.0.md`, `public-release-work/releases/v1.1.0.md`
 
