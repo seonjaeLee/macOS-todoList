@@ -1,7 +1,7 @@
 {
   "name": "desktop-todo",
   "version": "1.1.0",
-  "description": "macOS desktop post-it todo widget",
+  "description": "Desktop post-it todo widget (macOS · Windows)",
   "main": "main.js",
   "scripts": {
     "start": "node scripts/start-dev.js",
@@ -12,7 +12,10 @@
     "build:dir": "npm run verify && electron-builder --mac dir",
     "build": "npm run build:dir && rm -rf \"/Applications/todoList-myfunfun.app\" && cp -R \"dist/mac-arm64/todoList-myfunfun.app\" /Applications/",
     "build:dmg": "electron-builder --mac dmg",
-    "build:release": "electron-builder --mac dmg zip"
+    "build:release": "electron-builder --mac dmg zip",
+    "build:win": "npm run verify && node scripts/generate-win-icon.js && electron-builder --win portable --x64",
+    "build:win:dir": "npm run verify && node scripts/generate-win-icon.js && electron-builder --win dir --x64",
+    "icons:win": "node scripts/generate-win-icon.js"
   },
   "build": {
     "appId": "com.desktop-todo",
@@ -21,6 +24,18 @@
       "category": "public.app-category.productivity",
       "icon": "build/icon.icns",
       "identity": null
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false
     },
     "directories": {
       "output": "dist"
@@ -46,6 +61,7 @@
   "type": "commonjs",
   "devDependencies": {
     "electron": "^41.1.1",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^2.1.8"
   }
 }

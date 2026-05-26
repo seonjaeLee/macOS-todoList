@@ -1,5 +1,6 @@
 # 예정 작업
 
+- **Windows 포팅** — `docs/windows-port.md` Phase 1: `build:win`·Actions 워크플로 추가됨 → **GitHub Actions에서 exe 빌드·Windows에서 실행 확인** 남음
 - 메모 백업 기능 추가 예정
 
 # 완료·진행 중
@@ -21,6 +22,7 @@
 - **문서 역할**
   - 루트 `README.md`: 개발자용 클론·로컬 빌드·`/Applications` 설치
   - `public-release-work/README.md`: 일반 사용자용 Releases·dmg 설치 가이드
+  - `docs/windows-port.md`: Windows 포팅·**단일 레포 소스 관리** 계획
 
 # Git 운영 규칙 (개발/공개 분리)
 

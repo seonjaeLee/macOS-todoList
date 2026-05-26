@@ -40,6 +40,13 @@
 
 ## 2026-05-26
 
+### Windows 포팅 Phase 1 (빌드 인프라)
+
+- `docs/windows-port.md` — 단일 레포·Phase 0~4 계획.
+- `package.json` — `build:win` / `build:win:dir` / `icons:win`, portable x64, `png-to-ico`.
+- `scripts/generate-win-icon.js`, `.github/workflows/build-windows.yml` (Actions → exe 아티팩트).
+- CI용 `build/icon.png`만 git 추적 (`.gitignore` 예외).
+
 **v1.1.0 배포 준비** — 공개 릴리스 문구: `docs/release-notes-v1.1.0.md`, `public-release-work/releases/v1.1.0.md`
 
 ### 메모 열 정렬 (`main.js`)

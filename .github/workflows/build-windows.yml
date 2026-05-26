@@ -1,0 +1,42 @@
+# Windows portable exe — mac 없이도 빌드 가능 (Phase 1)
+# Actions 탭에서 수동 실행 또는 main 푸시 시
+name: Build Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '**.js'
+      - '**.html'
+      - '**.css'
+      - 'package.json'
+      - 'build/**'
+      - '.github/workflows/build-windows.yml'
+
+jobs:
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate icon.ico
+        run: node scripts/generate-win-icon.js
+
+      - name: Build Windows portable
+        run: npm run build:win
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: todoList-myfunfun-win-x64
+          path: dist/*.exe
+          if-no-files-found: error
