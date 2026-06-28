@@ -608,6 +608,9 @@ function handleTrayMenuAction(action) {
     case 'list':
       openMemoListWindow()
       break
+    case 'draft-note':
+      openOrFocusDraftNote()
+      break
     case 'toggle-all':
       areAllVisible() ? hideAllWidgets() : showAllWidgets()
       break
@@ -702,6 +705,8 @@ function setupApplicationMenu() {
           { label: '새 메모 추가', accelerator: 'CmdOrCtrl+N', click: () => setImmediate(() => addNewWidget()) },
           { type: 'separator' },
           { label: '메모 목록', click: () => openMemoListWindow() },
+          { type: 'separator' },
+          { label: '초안 노트', click: () => openOrFocusDraftNote() },
         ],
       },
     ]))
@@ -745,6 +750,8 @@ function setupApplicationMenu() {
         },
         { type: 'separator' },
         { label: '메모 목록', click: () => openMemoListWindow() },
+        { type: 'separator' },
+        { label: '초안 노트', click: () => openOrFocusDraftNote() },
       ],
     },
   ]
@@ -769,6 +776,8 @@ function updateTrayMenu() {
     { label: '새 메모 추가', accelerator: 'CmdOrCtrl+N', click: () => addNewWidget() },
     { type: 'separator' },
     { label: '메모 목록', click: () => openMemoListWindow() },
+    { type: 'separator' },
+    { label: '초안 노트', click: () => openOrFocusDraftNote() },
     { type: 'separator' },
     {
       label: allVisible ? '모두 숨기기' : '모두 보이기',
@@ -797,6 +806,7 @@ function getWidgetListPayload() {
       visible: state.win.isVisible(),
       color: state.data.color || '#FFF176',
       alwaysOnTop: !!state.data.alwaysOnTop,
+      type: state.data.type === 'draft' ? 'draft' : 'memo',
     }))
 }
 
@@ -864,6 +874,33 @@ function openGuideWindow() {
 ipcMain.on('close-guide', () => {
   if (guideWin && !guideWin.isDestroyed()) guideWin.close()
 })
+
+// ───────────────────────────── 초안 노트(싱글톤) ─────────────────────────────
+function createDefaultDraftNoteData() {
+  return {
+    id: 'draft-note',
+    type: 'draft',
+    title: '초안 노트',
+    color: COLORS[1],
+    text: '',
+    collapsed: false,
+    alwaysOnTop: false,
+    hidden: true,
+    x: undefined,
+    y: undefined,
+  }
+}
+
+function openOrFocusDraftNote() {
+  const state = widgetStates.get('draft-note')
+  if (!state || state.win.isDestroyed()) return
+  state.win.show()
+  state.win.focus()
+  state.data.hidden = false
+  persistAll()
+  updateTrayMenu()
+  notifyWidgetListUpdated()
+}
 
 // ───────────────────────────── IPC 핸들러 ─────────────────────────────
 function addNewWidget() {
@@ -1172,7 +1209,11 @@ app.whenReady().then(() => {
       y: undefined,
     }]
   }
+  if (!savedWidgets.some((w) => w.type === 'draft')) {
+    savedWidgets.push(createDefaultDraftNoteData())
+  }
   savedWidgets.forEach((data) => createWidget(data))
+  persistAll()
   if (savedWidgets.length > 1) {
     setTimeout(() => reflowAllColumnsOnStartup(), 150)
   }

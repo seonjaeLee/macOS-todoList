@@ -38,6 +38,21 @@
 
 ---
 
+## 2026-06-28
+
+### 초안 노트(draft-note) 싱글톤 위젯 추가
+
+- **개요**: 할일 리스트 대신 textarea 하나로 꽉 찬 자유 텍스트 메모. 앱 전체에 단 하나만 존재(추가/삭제 없음) — 내용은 그 안에서 직접 쓰고 지움.
+- **구현**: 새 파일 없이 기존 `widget.html`/`widget.js`/`widget.css`를 `data.type === 'draft'` 분기로 확장(메모와 동일한 드래그·접기/펼치기·리사이즈·색상 변경·항상 위에 띄우기·툴팁 재사용).
+  - `main.js`: `createDefaultDraftNoteData()`(고정 `id: 'draft-note'`)로 시드 — 신규 설치·기존 `widgets.json` 업그레이드 모두 보장. `openOrFocusDraftNote()` 추가, 트레이 메뉴(mac 네이티브 + Windows 커스텀 팝업)·앱메뉴 "메모" 서브메뉴에 **초안 노트** 항목 추가. `getWidgetListPayload()`에 `type` 필드 추가.
+  - `widget.html`/`widget.css`: `#draft-text` textarea 추가, `body.is-draft-note` 클래스로 본문(할일 리스트)·＋(메모 추가)·삭제 컨트롤 숨김.
+  - `widget.js`: `data.type === 'draft'` 분기로 `text` 필드 동기화(`memo-desc`와 동일하게 blur 시 저장), `#new-todo`와 동일한 클립보드 보조(`handleClipboardShortcut`) 재사용.
+  - `memo-list.js`: 초안 노트 행은 색상 점·제목 수정·항상위 토글은 동일하게 노출, 삭제 버튼만 숨김(삭제 불가 항목이므로).
+  - `tray-menu.js`(Windows): 동일 메뉴 항목 추가 — **실제 Windows 동작 확인은 다음 Windows 테스트 때 같이 진행**(이번엔 mac만 로컬 검증).
+- mac `npm start`로 로컬 검증 완료(트레이 메뉴 진입·텍스트 입력/유지·메모 목록 노출 확인).
+
+---
+
 ## 2026-05-26
 
 ### Windows 포팅 · 집 PC 테스트 (세션 마무리)

@@ -5,12 +5,14 @@
   - [ ] 항상 위·툴팁·목록 여백·종료 경로 최종 체크
   - [ ] Phase 2 잔여: `widget.js` Ctrl 단축키, `scripts/start-dev` Windows 경로
   - [ ] Phase 3: `guide.html` Windows 안내, v1.2.0 릴리스 문서·공개 Release
+  - [ ] 초안 노트(draft-note) 트레이 메뉴 항목 Windows 실기 동작 확인(`tray-menu.js`, 이번엔 mac만 검증)
 - 메모 백업 기능 추가 예정
 
 # 완료·진행 중
 
 - v1.0.0 1차 dmg 공개 배포 완료
 - v1.1.0 mac — 기능·dmg Release 완료 (`history.md` 2026-05-26)
+- **초안 노트(draft-note) 싱글톤 위젯** — mac `npm start` 검증 완료 (`history.md` 2026-06-28)
 - **Windows Phase 1** — Actions 빌드·exe 실행·메모 UI 기본 동작 확인(집 PC)
 - **Windows Phase 2** — 1~2차 피드백 반영 커밋 완료; **z-order(`3f4b52d`)는 아직 집 PC 재테스트 전**
 

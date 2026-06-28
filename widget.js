@@ -30,6 +30,7 @@ const $moreDelete  = document.getElementById('more-delete')
 const $ctxMenu     = document.getElementById('ctx-menu')
 const $colorInput  = document.getElementById('color-input')
 const $memoDesc    = document.getElementById('memo-desc')
+const $draftText   = document.getElementById('draft-text')
 
 /** 넓은 창에서만 타이틀바 아이콘 펼침 (중간 크기는 ⋮ 유지) */
 const TITLEBAR_EXPAND_MIN_WIDTH = 400
@@ -81,6 +82,7 @@ function syncMenuFloatState() {
 
 async function runMenuAction(action) {
   if (!widgetData) return
+  if (widgetData.type === 'draft' && (action === 'add' || action === 'delete')) return
   switch (action) {
     case 'add':
       closeAllMenus()
@@ -145,8 +147,17 @@ window.api.onInitWidget((data) => {
   renderTitle(data.title)
 
   $colorInput.value = data.color
-  $memoDesc.value = data.desc || ''
-  if (!data.collapsed) scheduleResizeDesc()
+
+  const isDraft = data.type === 'draft'
+  document.body.classList.toggle('is-draft-note', isDraft)
+
+  if (isDraft) {
+    $draftText.value = data.text || ''
+  } else {
+    $memoDesc.value = data.desc || ''
+    if (!data.collapsed) scheduleResizeDesc()
+    data.todos.forEach((todo) => appendTodoItem(todo))
+  }
 
   if (data.collapsed) {
     $widget.classList.add('collapsed')
@@ -154,8 +165,6 @@ window.api.onInitWidget((data) => {
 
   updateAlwaysOnTopUI(!!data.alwaysOnTop)
   updateTitlebarLayout()
-
-  data.todos.forEach((todo) => appendTodoItem(todo))
 })
 
 window.addEventListener('resize', updateTitlebarLayout)
@@ -431,7 +440,7 @@ $btnAddWidget.addEventListener('click', (e) => {
 function canShowBodyContextMenu(target) {
   if (!$widget || $widget.classList.contains('collapsed')) return false
   if (target.closest('#titlebar, .resize-handle, .more-menu, .ctx-menu, #titlebar-more')) return false
-  if (target.closest('.todo-item, .input-row, .memo-desc, .footer, #new-todo, .btn-add-todo, .btn-clear')) {
+  if (target.closest('.todo-item, .input-row, .memo-desc, .footer, #new-todo, .btn-add-todo, .btn-clear, .draft-text')) {
     return false
   }
   return target.closest('#widget')
@@ -597,6 +606,16 @@ $memoDesc.addEventListener('input', () => {
 })
 $memoDesc.addEventListener('blur', () => {
   sync({ desc: $memoDesc.value })
+})
+
+$draftText.addEventListener('input', () => {
+  widgetData.text = $draftText.value
+})
+$draftText.addEventListener('blur', () => {
+  sync({ text: $draftText.value })
+})
+$draftText.addEventListener('keydown', (e) => {
+  handleClipboardShortcut(e, $draftText)
 })
 
 $btnClose.addEventListener('click', () => {

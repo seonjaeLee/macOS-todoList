@@ -43,6 +43,8 @@ async function render() {
   addSep()
   addButton('메모 목록', 'list')
   addSep()
+  addButton('초안 노트', 'draft-note')
+  addSep()
   addButton(state.allVisible ? '모두 숨기기' : '모두 보이기', 'toggle-all')
   addSep()
   addCheckbox('시작 시 실행', 'login', state.openAtLogin)
