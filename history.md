@@ -50,6 +50,7 @@
   - `memo-list.js`: 초안 노트 행은 색상 점·제목 수정·항상위 토글은 동일하게 노출, 삭제 버튼만 숨김(삭제 불가 항목이므로).
   - `tray-menu.js`(Windows): 동일 메뉴 항목 추가 — **실제 Windows 동작 확인은 다음 Windows 테스트 때 같이 진행**(이번엔 mac만 로컬 검증).
 - mac `npm start`로 로컬 검증 완료(트레이 메뉴 진입·텍스트 입력/유지·메모 목록 노출 확인).
+- **`npm run build`로 `/Applications/todoList-myfunfun.app`(실제 Dock 실행 설치본)까지 갱신·확인 완료.** `npm start`는 `dist/` 개발용 복제본만 빌드해 둘이 별개라, 설치본에는 반영 안 됐던 걸 뒤늦게 발견해 추가로 빌드함 — 기능 완료 시 `npm run build`까지 같이 하는 걸 빠뜨리지 말 것.
 
 ---
 
