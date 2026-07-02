@@ -152,7 +152,14 @@ window.api.onInitWidget((data) => {
   document.body.classList.toggle('is-draft-note', isDraft)
 
   if (isDraft) {
-    $draftText.value = data.text || ''
+    // 과거 데이터는 textarea 시절 순수 텍스트, 서식 적용 후에는 HTML(볼드/취소선/하이라이트 태그) —
+    // '<' 포함 여부로 구분해 순수 텍스트는 이스케이프해서 넣는다.
+    const savedText = data.text || ''
+    if (savedText.includes('<')) {
+      $draftText.innerHTML = savedText
+    } else {
+      $draftText.textContent = savedText
+    }
   } else {
     $memoDesc.value = data.desc || ''
     if (!data.collapsed) scheduleResizeDesc()
@@ -313,6 +320,39 @@ function handleClipboardShortcut(e, target) {
       if (!text) return
       document.execCommand('insertText', false, text)
     }).catch(() => {})
+    return true
+  }
+
+  return false
+}
+
+const DRAFT_HIGHLIGHT_COLOR = '#fff59d'
+const DRAFT_HIGHLIGHT_RGB = 'rgb(255, 245, 157)'
+
+/** 초안 노트 전용 서식 단축키: Cmd/Ctrl+B 볼드, +Shift+X 취소선, +Shift+H 하이라이트 */
+function handleFormatShortcut(e) {
+  if (!(e.metaKey || e.ctrlKey) || e.altKey) return false
+  const key = e.key.toLowerCase()
+
+  if (key === 'b' && !e.shiftKey) {
+    document.execCommand('bold')
+    e.preventDefault()
+    return true
+  }
+
+  if (key === 'x' && e.shiftKey) {
+    document.execCommand('strikeThrough')
+    e.preventDefault()
+    return true
+  }
+
+  if (key === 'h' && e.shiftKey) {
+    // 초안 노트 배경 자체가 반투명 회색이라 queryCommandValue가 그 배경을 "배경 있음"으로
+    // 잘못 잡는 경우가 있어, "직접 적용한 하이라이트 색과 일치하는지"만 비교한다.
+    const current = document.queryCommandValue('backColor')
+    const isHighlighted = current === DRAFT_HIGHLIGHT_RGB
+    document.execCommand('hiliteColor', false, isHighlighted ? 'transparent' : DRAFT_HIGHLIGHT_COLOR)
+    e.preventDefault()
     return true
   }
 
@@ -600,13 +640,21 @@ $memoDesc.addEventListener('blur', () => {
   sync({ desc: $memoDesc.value })
 })
 
+function normalizeDraftEmptyState() {
+  // Chromium은 contenteditable을 전부 지워도 <br> 하나가 남는 경우가 있어
+  // :empty CSS(플레이스홀더 표시)가 먹지 않는다 — 완전히 비었으면 innerHTML도 비운다.
+  if ($draftText.textContent.trim() === '') $draftText.innerHTML = ''
+}
+
 $draftText.addEventListener('input', () => {
-  widgetData.text = $draftText.value
+  widgetData.text = $draftText.innerHTML
 })
 $draftText.addEventListener('blur', () => {
-  sync({ text: $draftText.value })
+  normalizeDraftEmptyState()
+  sync({ text: $draftText.innerHTML })
 })
 $draftText.addEventListener('keydown', (e) => {
+  if (handleFormatShortcut(e)) return
   handleClipboardShortcut(e, $draftText)
 })
 

@@ -740,7 +740,7 @@ body.low-light .btn-float.active .svg-float {
 body.low-light .title.is-placeholder,
 body.low-light .memo-desc::placeholder,
 body.low-light .new-todo::placeholder,
-body.low-light .draft-text::placeholder {
+body.low-light .draft-text:empty::before {
   color: rgba(255,255,255,0.6) !important;
 }
 
@@ -769,7 +769,7 @@ body.is-draft-note .footer {
   width: 100%;
   flex: 1;
   min-height: 0;
-  resize: none;
+  overflow-y: auto;
   background: rgba(0,0,0,0.06);
   border: none;
   border-radius: 0;
@@ -783,17 +783,27 @@ body.is-draft-note .footer {
   outline: none;
   user-select: text;
   -webkit-user-select: text;
+  cursor: text;
+  white-space: pre-wrap;
 }
 
 body.is-draft-note .draft-text {
   display: block;
 }
 
-.draft-text::placeholder {
+.draft-text:empty::before {
+  content: attr(data-placeholder);
   color: rgba(0,0,0,0.3);
+  pointer-events: none;
 }
 
 .draft-text:focus {
   background: rgba(0,0,0,0.09);
+}
+
+/* 하이라이트(형광펜)는 execCommand('hiliteColor')가 background-color 인라인 스타일로 적용됨 —
+   low-light(어두운 배경) 모드에서도 형광펜 위 글자는 항상 어두운 색으로 고정해 대비를 보장 */
+body.low-light .draft-text [style*="background-color"] {
+  color: rgba(0,0,0,0.8) !important;
 }
 

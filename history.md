@@ -48,6 +48,18 @@
 - `npm run verify` 문법 검사 통과. `npm run build`로 `dist/`·`/Applications/todoList-myfunfun.app` 모두 갱신 후 실행 앱에서 붙여넣기 → 실행취소/다시실행 정상 동작 확인 완료(mac).
 - **Windows 미검증**: 공용 코드(`widget.js`)라 Windows에도 그대로 적용되지만, 다음 Windows(집 PC) 테스트 때 초안 노트 붙여넣기/실행취소·다시실행 동작을 같이 확인할 것.
 
+### 초안 노트(draft-note) 볼드·취소선·하이라이트 서식 추가
+
+- **요청**: 초안 노트에서 텍스트 블록 선택 후 볼드/취소선/하이라이트(형광펜) 서식을 적용하고 싶다는 요청.
+- **단축키**: `Cmd/Ctrl+B` 볼드, `Cmd/Ctrl+Shift+X` 취소선, `Cmd/Ctrl+Shift+H` 하이라이트(`#fff59d`). 앱 내 기존 단축키(`Cmd+N`, `Alt+F4`)와 충돌 없음을 확인 후 결정. `Cmd+U`(밑줄 관례)·`Cmd+T`(탭 확장 여지)·평범한 `Shift+H`(대문자 타이핑과 충돌)는 후보에서 제외.
+- **구조 변경**: `#draft-text`를 부분 서식이 불가능한 `<textarea>`에서 `contenteditable` div로 전환(`widget.html`). 볼드/취소선/하이라이트 모두 `document.execCommand` 기반이라 기존 undo/redo 스택과 자연스럽게 통합됨.
+- **데이터 마이그레이션**: 기존 초안은 순수 텍스트, 서식 적용 후에는 HTML 저장 — 로드 시 `<` 포함 여부로 구분해 순수 텍스트는 이스케이프(`widget.js` `onInitWidget`).
+- **플레이스홀더**: contenteditable엔 네이티브 `placeholder`가 없어 `:empty::before` + `data-placeholder`로 대체. Chromium이 완전히 비워도 `<br>` 하나를 남기는 경우가 있어 blur/input 시 `innerHTML`을 강제로 비우는 정규화 로직 추가.
+- **버그 수정(1차 확인 중 발견)**: 하이라이트 토글이 항상 "끄기"로만 동작 — 초안 노트 배경 자체가 `rgba(0,0,0,0.06)`라 `document.queryCommandValue('backColor')`가 이 배경색을 "이미 하이라이트됨"으로 오판. 직접 적용한 하이라이트 색(`rgb(255, 245, 157)`)과 정확히 일치하는지만 비교하도록 수정.
+- **low-light 대응**: 어두운 배경 모드에서도 하이라이트 위 글자는 항상 어두운 색으로 고정해 대비 확보(`widget.css`).
+- `npm run verify` 통과. `npm start`로 볼드/취소선/하이라이트 토글·undo/redo 사용자 확인 완료(mac). `npm run build`로 `/Applications` 갱신 완료.
+- **Windows 미검증**: 공용 코드라 그대로 적용되지만, 다음 Windows(집 PC) 테스트 때 서식 단축키(`Ctrl+B`/`Ctrl+Shift+X`/`Ctrl+Shift+H`) 동작을 같이 확인할 것.
+
 ---
 
 ## 2026-06-28
