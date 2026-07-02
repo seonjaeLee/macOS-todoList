@@ -68,6 +68,7 @@
 - **`guide.html` — Windows 안내 추가**: 지금까지 `macOS 전용`으로 고정돼 있던 사용 가이드를 플랫폼별로 전환. `window.api.getPlatform()`(widget.js와 동일 패턴)으로 `body.platform-win32` 클래스를 붙이고, `.mac-only`/`.win-only` span으로 새 메모 단축키(⌘N ↔ Ctrl+N)·메뉴바 ↔ 작업 표시줄 트레이 문구·색상 피커 명칭·로그인 시 자동 실행/종료 항목을 분기. 이 김에 그동안 가이드에 전혀 없었던 **초안 노트** 항목도 추가(여는 방법 + 서식 단축키).
 - `npm run verify` 통과, `guide.html` div/span 태그 밸런스 확인. **mac 쪽 GUI 실행 재검증은 이번에 못 함** — 이 세션의 Bash 실행 환경 자체가 `com.apple.provenance`/Gatekeeper 정책으로 로컬 빌드 앱 실행을 막고 있어(이전 볼드/취소선/하이라이트 작업 때 발견한 것과 동일한 제약) 정적 검사로 대체.
 - **Windows 미검증(전부 집 PC 실기 테스트 필요)**: `npm start`(Windows 신규 경로), `Ctrl` 단축키 실동작, `guide.html` 플랫폼 전환 표시. `current_task.md`·`docs/windows-port.md`에 체크리스트 반영.
+- **후속(같은 날)**: 사용자 피드백으로 초안 노트 서식 단축키 표기를 "블록 선택 후 ⌘B/⌘⇧X/⌘⇧H로 볼드·취소선·하이라이트 적용" 한 줄 문장에서 **이름(볼드/취소선/하이라이트) + 단축키를 행별로 분리**한 목록(`.format-list`)으로 변경 — 가독성 개선. `npm run build`로 `/Applications` 갱신 확인 후 커밋·푸시(`8bf1888`). 이 push로 `.github/workflows/build-windows.yml`(`**.html` 경로 트리거) 자동 빌드가 걸려, 집 PC 테스트용 최신 exe는 GitHub Actions Artifacts에서 받으면 됨.
 
 ---
 
