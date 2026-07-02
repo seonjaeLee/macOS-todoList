@@ -193,13 +193,13 @@ else if (process.platform === 'win32') { ... }
 - [x] `setupApplicationMenu` — Windows 파일·편집·메모·종료
 - [x] 트레이·작업 표시줄·항상 위·exe 아이콘 (1차 코드 반영, **집 PC 재테스트 필요**)
 - [x] `widget.css` `platform-win32` 타이틀바·＋ 축소
-- [ ] `scripts/start-dev` — Windows 개발 실행 경로
-- [ ] `widget.js` 단축키 `Ctrl` (제목·할 일 입력)
+- [x] `scripts/start-dev` — Windows 개발 실행 경로 (`dist/win-unpacked` + `build:win:dir`, **집 PC 실행 확인 필요**, `history.md` 2026-07-02)
+- [x] `widget.js` 단축키 `Ctrl` (제목·할 일 입력) — `handleClipboardShortcut`/`handleFormatShortcut`가 이미 `metaKey || ctrlKey` 공통 처리 중이라 코드 감사만 하고 완료 처리 (**집 PC 실기 확인 필요**, `history.md` 2026-07-02)
 
 ### Phase 3 — 품질·배포
 
 - [ ] reflow·접기/펼치기·툴팁 Windows 회귀
-- [ ] `guide.html` Windows 문단 추가
+- [x] `guide.html` Windows 문단 추가 (`history.md` 2026-07-02)
 - [ ] `docs/release-notes-v1.2.0.md` · 공개 `releases/` · GitHub Release (exe)
 - [ ] `history.md` 기록
 

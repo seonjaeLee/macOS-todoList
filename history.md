@@ -60,6 +60,15 @@
 - `npm run verify` 통과. `npm start`로 볼드/취소선/하이라이트 토글·undo/redo 사용자 확인 완료(mac). `npm run build`로 `/Applications` 갱신 완료.
 - **Windows 미검증**: 공용 코드라 그대로 적용되지만, 다음 Windows(집 PC) 테스트 때 서식 단축키(`Ctrl+B`/`Ctrl+Shift+X`/`Ctrl+Shift+H`) 동작을 같이 확인할 것.
 
+### Windows 포팅 Phase 2 마무리 · Phase 3 일부 진행 (guide.html)
+
+- **배경**: mac/Windows를 같은 레포에서 함께 포팅하기로 했으나 어느 시점부터 mac 작업만 이어지고 Windows Phase 2 잔여 항목이 방치됨. `docs/windows-port.md` 체크리스트 기준으로 밀린 코드 작업을 이어서 진행(테스트는 사용자가 집 PC에서 직접 수행).
+- **`scripts/start-dev.js` — Windows 개발 실행 경로 추가**: 기존에는 macOS 외 플랫폼이면 즉시 에러 종료. `process.platform`으로 분기해 Windows에서는 `dist/win-unpacked/todoList-myfunfun.exe`를 실행하고, 소스 변경 감지 시 `npm run build:win:dir`(electron-builder `--win dir`)로 재빌드하도록 확장. 리빌드 감지 대상 `SOURCE_FILES`에 누락돼 있던 `tray-menu.*`(Windows 전용 커스텀 트레이 메뉴 창)도 함께 추가.
+- **`widget.js` 단축키 `Ctrl` 감사**: `handleClipboardShortcut`(복사/잘라내기/붙여넣기)·`handleFormatShortcut`(볼드/취소선/하이라이트) 모두 이미 `e.metaKey || e.ctrlKey`로 mac/Windows를 공통 처리하고 있어 추가 코드 변경 없이 감사만 완료. 실기 확인은 집 PC 테스트로 남김.
+- **`guide.html` — Windows 안내 추가**: 지금까지 `macOS 전용`으로 고정돼 있던 사용 가이드를 플랫폼별로 전환. `window.api.getPlatform()`(widget.js와 동일 패턴)으로 `body.platform-win32` 클래스를 붙이고, `.mac-only`/`.win-only` span으로 새 메모 단축키(⌘N ↔ Ctrl+N)·메뉴바 ↔ 작업 표시줄 트레이 문구·색상 피커 명칭·로그인 시 자동 실행/종료 항목을 분기. 이 김에 그동안 가이드에 전혀 없었던 **초안 노트** 항목도 추가(여는 방법 + 서식 단축키).
+- `npm run verify` 통과, `guide.html` div/span 태그 밸런스 확인. **mac 쪽 GUI 실행 재검증은 이번에 못 함** — 이 세션의 Bash 실행 환경 자체가 `com.apple.provenance`/Gatekeeper 정책으로 로컬 빌드 앱 실행을 막고 있어(이전 볼드/취소선/하이라이트 작업 때 발견한 것과 동일한 제약) 정적 검사로 대체.
+- **Windows 미검증(전부 집 PC 실기 테스트 필요)**: `npm start`(Windows 신규 경로), `Ctrl` 단축키 실동작, `guide.html` 플랫폼 전환 표시. `current_task.md`·`docs/windows-port.md`에 체크리스트 반영.
+
 ---
 
 ## 2026-06-28
