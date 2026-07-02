@@ -299,8 +299,6 @@ function handleClipboardShortcut(e, target) {
   const key = e.key.toLowerCase()
   if (key === 'a') return false
 
-  const isTextControl = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
-
   if (key === 'c' || key === 'x') {
     document.execCommand(key === 'c' ? 'copy' : 'cut')
     e.preventDefault()
@@ -309,17 +307,11 @@ function handleClipboardShortcut(e, target) {
 
   if (key === 'v') {
     e.preventDefault()
+    // execCommand('insertText')는 input/textarea·contentEditable 모두에서 동작하며,
+    // target.value를 직접 대입하는 방식과 달리 브라우저 undo 스택을 보존한다.
     navigator.clipboard.readText().then((text) => {
       if (!text) return
-      if (isTextControl) {
-        const start = target.selectionStart ?? target.value.length
-        const end = target.selectionEnd ?? start
-        target.value = target.value.slice(0, start) + text + target.value.slice(end)
-        const pos = start + text.length
-        target.selectionStart = target.selectionEnd = pos
-      } else {
-        document.execCommand('insertText', false, text)
-      }
+      document.execCommand('insertText', false, text)
     }).catch(() => {})
     return true
   }

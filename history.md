@@ -38,6 +38,18 @@
 
 ---
 
+## 2026-07-02
+
+### 초안 노트(draft-note) 붙여넣기 후 실행취소/다시실행 안 되는 문제 수정
+
+- **증상**: 초안 노트에서 텍스트 입력·복사/붙여넣기·잘라내기/붙여넣기는 정상 동작하지만, 이후 `Cmd+Z`(실행취소)/`Cmd+Shift+Z`(다시실행)가 동작하지 않음.
+- **원인**: `widget.js`의 `handleClipboardShortcut()`에서 `textarea`/`input`(초안 노트 `#draft-text`, 할 일 입력창 `#new-todo`)에 붙여넣기 시 `target.value = ...`로 문자열을 직접 대입 → 브라우저 네이티브 undo 스택이 초기화되어 이후 실행취소/다시실행이 무효화됨. 제목(`contentEditable`)은 이미 `document.execCommand('insertText', ...)`를 써서 문제 없었음.
+- **수정**: 모든 붙여넣기 대상에서 `document.execCommand('insertText', false, text)`로 통일(`widget.js`). textarea/input에서도 undo 스택을 보존하는 네이티브 명령이라 별도 분기 불필요.
+- `npm run verify` 문법 검사 통과. `npm run build`로 `dist/`·`/Applications/todoList-myfunfun.app` 모두 갱신 후 실행 앱에서 붙여넣기 → 실행취소/다시실행 정상 동작 확인 완료(mac).
+- **Windows 미검증**: 공용 코드(`widget.js`)라 Windows에도 그대로 적용되지만, 다음 Windows(집 PC) 테스트 때 초안 노트 붙여넣기/실행취소·다시실행 동작을 같이 확인할 것.
+
+---
+
 ## 2026-06-28
 
 ### 초안 노트(draft-note) 싱글톤 위젯 추가

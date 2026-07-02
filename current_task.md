@@ -6,6 +6,7 @@
   - [ ] Phase 2 잔여: `widget.js` Ctrl 단축키, `scripts/start-dev` Windows 경로
   - [ ] Phase 3: `guide.html` Windows 안내, v1.2.0 릴리스 문서·공개 Release
   - [ ] 초안 노트(draft-note) 트레이 메뉴 항목 Windows 실기 동작 확인(`tray-menu.js`, 이번엔 mac만 검증)
+  - [ ] 초안 노트 붙여넣기 후 실행취소/다시실행(`Cmd+Z`/`Cmd+Shift+Z` → Windows는 `Ctrl+Z`/`Ctrl+Shift+Z`) 동작 확인(`widget.js` `handleClipboardShortcut`, 이번엔 mac만 검증, `history.md` 2026-07-02)
 - 메모 백업 기능 추가 예정
 
 # 완료·진행 중
