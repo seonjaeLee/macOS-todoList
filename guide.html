@@ -155,6 +155,26 @@
     .win-only { display: none; }
     body.platform-win32 .mac-only { display: none; }
     body.platform-win32 .win-only { display: inline; }
+
+    /* 서식 단축키처럼 "이름 + 단축키" 짝을 여러 줄로 보여줄 때 */
+    .format-list {
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .format-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .format-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1d1d1f;
+      width: 60px;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -198,9 +218,23 @@
       <div class="item">
         <div class="item-body">
           <div class="item-title">초안 노트</div>
-          <div class="item-desc"><span class="mac-only">메뉴바 아이콘</span><span class="win-only">작업 표시줄 트레이 아이콘</span> → <kbd>초안 노트</kbd>에서 열 수 있는, 앱에 하나뿐인 자유 텍스트 메모입니다(추가·삭제 불가)<br>블록 선택 후
-            <span class="mac-only"><kbd>⌘B</kbd>/<kbd>⌘⇧X</kbd>/<kbd>⌘⇧H</kbd></span><span class="win-only"><kbd>Ctrl+B</kbd>/<kbd>Ctrl+Shift+X</kbd>/<kbd>Ctrl+Shift+H</kbd></span>
-            로 볼드·취소선·하이라이트 서식 적용</div>
+          <div class="item-desc">
+            <span class="mac-only">메뉴바 아이콘</span><span class="win-only">작업 표시줄 트레이 아이콘</span> → <kbd>초안 노트</kbd>에서 열 수 있는, 앱에 하나뿐인 자유 텍스트 메모입니다(추가·삭제 불가)<br>블록 선택 후 아래 단축키로 서식 적용
+            <div class="format-list">
+              <div class="format-row">
+                <span class="format-label">볼드</span>
+                <span class="mac-only"><kbd>⌘B</kbd></span><span class="win-only"><kbd>Ctrl+B</kbd></span>
+              </div>
+              <div class="format-row">
+                <span class="format-label">취소선</span>
+                <span class="mac-only"><kbd>⌘⇧X</kbd></span><span class="win-only"><kbd>Ctrl+Shift+X</kbd></span>
+              </div>
+              <div class="format-row">
+                <span class="format-label">하이라이트</span>
+                <span class="mac-only"><kbd>⌘⇧H</kbd></span><span class="win-only"><kbd>Ctrl+Shift+H</kbd></span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
