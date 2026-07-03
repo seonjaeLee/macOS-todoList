@@ -38,6 +38,17 @@
 
 ---
 
+## 2026-07-04
+
+### Windows 로그인 시 자동 실행 안 되는 문제 수정
+
+- **증상**: Windows에서 "시작 시 실행"을 켜고 재부팅해도 앱이 자동 실행되지 않음(체크박스 상태는 켜진 채로 남아있어 더 헷갈림).
+- **원인**: Windows 빌드 타깃이 `portable`(`package.json` `build.win.target`)이라, 실행할 때마다 앱이 임시 폴더에 풀려 그 안의 exe를 구동함 — 이 상태의 `process.execPath`는 매번 바뀌는 임시 경로. 그런데 `main.js`의 로그인 항목 등록 코드 3곳(`handleTrayMenuAction('login')`, 트레이 컨텍스트 메뉴 체크박스, 최초 실행 시 자동 등록)이 전부 `app.setLoginItemSettings({ openAtLogin: true })`처럼 `path`를 지정하지 않아 기본값(`process.execPath`, 즉 임시 경로)이 레지스트리에 등록됨. 그 임시 폴더는 앱 종료 후 사라지므로 재부팅 시 Windows가 존재하지 않는 경로를 실행하려다 조용히 실패.
+- **수정**: `getLoginItemOptions()`/`getOpenAtLogin()`/`setOpenAtLogin()` 헬퍼 추가(`main.js`). Windows에서 electron-builder portable 런처가 심어주는 `PORTABLE_EXECUTABLE_FILE` 환경변수(사용자가 실제로 받은 고정 exe 경로)가 있으면 그 경로로 등록·조회하도록 통일. mac은 옵션이 빈 객체(`{}`)라 기존 동작과 동일 — 동작 변화 없음.
+- `npm run verify` 통과, `npm run build`로 `/Applications` 갱신 완료(mac 쪽 로직 변화 없어 재검증 생략). **Windows 실기 확인은 다음 집 PC 테스트 때 필요**: 로그인 시 실행 체크 → 재부팅 → 자동 실행 확인.
+
+---
+
 ## 2026-07-03
 
 ### Windows(집 PC) 첫 실기 테스트 — 트레이 메뉴·초안 노트

@@ -3,6 +3,7 @@
 - **Windows 포팅 (이어서)** — `docs/windows-port.md` 참고. 코드 반영은 이번에 Phase 2 마무리·Phase 3 일부까지 진행했고, 아래는 전부 **집 PC 실기 테스트만 남은 항목**(코드는 완료):
   - [x] Actions `3f4b52d` exe → **트레이 메뉴가 메모 위에** 표시되는지 재확인 — 2026-07-03 집 PC 확인 완료(아래 참고)
   - [ ] 항상 위·툴팁·목록 여백·종료 경로 최종 체크
+  - [ ] 로그인 시 자동 실행 — portable exe 경로 문제 수정(`main.js` `setOpenAtLogin`, `history.md` 2026-07-04) 후 재부팅 실기 확인 필요
   - [ ] `npm start`(Windows) — `dist/win-unpacked` 실행 경로 신규 추가분 실행 확인(`scripts/start-dev.js`, `history.md` 2026-07-02)
   - [ ] `widget.js` 단축키 `Ctrl`(제목·할 일 입력) 실기 확인 — 코드는 mac과 공통이라 감사만 완료(`history.md` 2026-07-02)
   - [x] 초안 노트(draft-note) 트레이 메뉴 항목 Windows 실기 동작 확인 — 2026-07-03 집 PC 확인 완료(아래 참고)

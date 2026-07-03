@@ -569,6 +569,25 @@ function hideAllWidgets() {
   notifyWidgetListUpdated()
 }
 
+// ───────────────────────────── 로그인 시 자동 실행 ─────────────────────────────
+// Windows portable 빌드는 실행할 때마다 임시 폴더에 풀려 process.execPath가 매번 바뀜.
+// electron-builder portable 런처가 심어주는 PORTABLE_EXECUTABLE_FILE(사용자가 실제로 받은
+// 고정 exe 경로)로 등록해야 재부팅 후에도 자동 실행이 유지됨.
+function getLoginItemOptions() {
+  if (IS_WIN && process.env.PORTABLE_EXECUTABLE_FILE) {
+    return { path: process.env.PORTABLE_EXECUTABLE_FILE }
+  }
+  return {}
+}
+
+function getOpenAtLogin() {
+  return app.getLoginItemSettings(getLoginItemOptions()).openAtLogin
+}
+
+function setOpenAtLogin(enabled) {
+  app.setLoginItemSettings({ ...getLoginItemOptions(), openAtLogin: enabled })
+}
+
 // ───────────────────────────── 트레이 ─────────────────────────────
 function setupTray() {
   const trayIconPath = path.join(__dirname, 'status_icon.png')
@@ -595,7 +614,7 @@ function setupTray() {
 function getTrayMenuStatePayload() {
   return {
     allVisible: areAllVisible(),
-    openAtLogin: app.getLoginItemSettings().openAtLogin,
+    openAtLogin: getOpenAtLogin(),
   }
 }
 
@@ -615,7 +634,7 @@ function handleTrayMenuAction(action) {
       areAllVisible() ? hideAllWidgets() : showAllWidgets()
       break
     case 'login':
-      app.setLoginItemSettings({ openAtLogin: !app.getLoginItemSettings().openAtLogin })
+      setOpenAtLogin(!getOpenAtLogin())
       updateTrayMenu()
       break
     case 'guide':
@@ -769,7 +788,7 @@ function updateTrayMenu() {
     return
   }
 
-  const isLoginItem = app.getLoginItemSettings().openAtLogin
+  const isLoginItem = getOpenAtLogin()
   const allVisible = areAllVisible()
 
   tray.setContextMenu(Menu.buildFromTemplate([
@@ -788,7 +807,7 @@ function updateTrayMenu() {
       label: '로그인 시 자동 실행',
       type: 'checkbox',
       checked: isLoginItem,
-      click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked }),
+      click: (item) => setOpenAtLogin(item.checked),
     },
     { type: 'separator' },
     { label: '사용 가이드', click: () => openGuideWindow() },
@@ -1190,7 +1209,7 @@ app.whenReady().then(() => {
 
   // 패키징된 앱의 최초 실행 시 → 로그인 항목 자동 등록
   if (app.isPackaged && !fs.existsSync(INIT_FLAG)) {
-    app.setLoginItemSettings({ openAtLogin: true })
+    setOpenAtLogin(true)
     try {
       fs.mkdirSync(path.dirname(INIT_FLAG), { recursive: true })
       fs.writeFileSync(INIT_FLAG, '1')
