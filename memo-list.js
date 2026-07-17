@@ -125,6 +125,7 @@ async function renderList() {
     })
 
     title.addEventListener('keydown', async (e) => {
+      if (e.isComposing) return
       if (e.key === 'Enter') {
         e.preventDefault()
         title.blur()

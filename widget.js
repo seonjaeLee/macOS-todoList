@@ -396,6 +396,7 @@ window.api.onExternalAlwaysOnTopUpdate((value) => {
 
 $title.addEventListener('keydown', (e) => {
   if (handleClipboardShortcut(e, $title)) return
+  if (e.isComposing) return
   if (e.key === 'Enter') { e.preventDefault(); $title.blur() }
   if (e.key === 'Escape') {
     renderTitle(widgetData.title)
@@ -567,6 +568,7 @@ function appendTodoItem(todo) {
   })
 
   label.addEventListener('keydown', (e) => {
+    if (e.isComposing) return
     if (e.key === 'Enter') { e.preventDefault(); label.blur() }
     if (e.key === 'Escape') { label.textContent = todo.text; label.contentEditable = 'false' }
   })

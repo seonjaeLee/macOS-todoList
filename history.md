@@ -50,6 +50,13 @@
   - 백업조차 없거나 복구 실패 시, 손상된 파일을 조용히 지우지 않고 `widgets.json.corrupted-<시각>`으로 이름을 바꿔 보존(수동 복구 여지).
 - `node -c main.js` 문법 검증 통과. 샌드박스에서는 빌드된 Electron 앱을 직접 구동해 재현 테스트를 할 수 없어(Gatekeeper 제약), **Windows 실기 확인 필요**: 빌드 후 강제 종료(작업 관리자 종료 등)로 재현 시도 → 재실행 시 데이터 유지되는지 확인.
 
+### Windows에서 한글 블럭 수정 시 입력이 깨지는 문제 수정
+
+- **증상**: Windows 11에서 이미 입력돼 있던 텍스트를 블럭으로 선택한 뒤 한글로 다시 입력(수정)하면 입력이 깨지고 이상한 현상이 발생. macOS에서는 아직 미발견.
+- **원인**: `widget.js`의 위젯 제목(`$title`)·할일 항목 텍스트(`label`) 편집, `memo-list.js`의 메모 목록 제목 편집 — 이 세 곳의 `keydown` 핸들러가 `Enter`/`Escape`를 `e.isComposing` 체크 없이 바로 "편집 종료" 신호로 처리하고 있었음. 반면 같은 파일의 `$newTodo`(새 할일 입력창)는 `e.key === 'Enter' && !e.isComposing`으로 이미 정확히 가드돼 있었음(불일치). 한글은 자모 조합형 입력이라 마지막 글자를 조합 중(`isComposing: true`)일 때 `Enter`가 눌리면(조합 확정 목적이든 습관적으로 이어 누른 것이든), 조합이 끝나기도 전에 `blur()`로 편집 모드가 강제 종료되어 조합 중이던 문자가 잘리거나 깨진 채 커밋됨. Windows IME(TSF 기반)가 macOS 한글 입력기보다 조합 상태를 다르게/오래 유지하는 경향이 있어 Windows에서 더 두드러지는 것으로 추정.
+- **수정** (`widget.js` `$title`/`label` keydown, `memo-list.js` `title` keydown): 세 곳 모두 `$newTodo`와 동일하게 `e.isComposing`일 때는 Enter/Escape 처리를 건너뛰도록 가드 추가.
+- `npm run verify` 통과. 정적 코드 분석으로 찾은 확실한 불일치/버그이고 증상과도 부합하지만, 샌드박스 제약으로 실제 한글 IME 재현 테스트는 못함 — **Windows 실기 확인 필요**: 텍스트 블럭 선택 후 한글로 덮어쓰기, 특히 마지막 글자 조합 중 Enter를 눌러 재현 시도.
+
 ---
 
 ## 2026-07-04
