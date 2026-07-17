@@ -47,19 +47,47 @@ function configureAppPresentation() {
 
 // ───────────────────────────── 데이터 저장 경로 ─────────────────────────────
 const DATA_FILE = path.join(app.getPath('userData'), 'widgets.json')
+const BACKUP_FILE = `${DATA_FILE}.bak`
 const INIT_FLAG  = path.join(app.getPath('userData'), '.initialized')
 
+// 비정상 종료(강제 종료·정전·업데이트 재시작 등) 도중 쓰기가 끊기면 JSON이
+// 깨질 수 있다. 이 경우 조용히 빈 배열을 반환하던 이전 로직이 시작 시
+// "기존 자료 없음"으로 오인되어 기본 위젯으로 즉시 덮어써지는 데이터 유실을
+// 유발했다(#가끔 메모가 전부 사라짐). 백업 파일로 폴백하고, 그마저 실패하면
+// 손상 파일을 지우지 않고 보존해 복구 여지를 남긴다.
 function loadData() {
   try {
     if (fs.existsSync(DATA_FILE)) return JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'))
-  } catch (e) { console.error('데이터 로드 실패:', e) }
+  } catch (e) {
+    console.error('데이터 로드 실패, 백업에서 복구 시도:', e)
+    try {
+      if (fs.existsSync(BACKUP_FILE)) {
+        const recovered = JSON.parse(fs.readFileSync(BACKUP_FILE, 'utf-8'))
+        console.error('백업에서 복구 성공')
+        return recovered
+      }
+    } catch (e2) {
+      console.error('백업 복구도 실패:', e2)
+    }
+    try {
+      fs.renameSync(DATA_FILE, `${DATA_FILE}.corrupted-${Date.now()}`)
+    } catch (e3) {}
+  }
   return []
 }
 
+// 임시 파일에 쓴 뒤 rename으로 교체(원자적 치환) — 도중에 프로세스가 죽어도
+// 기존 widgets.json은 그대로 남아 손상되지 않는다. 매 저장 전 직전 상태를
+// .bak으로 남겨 메인 파일이 깨졌을 때도 최근 데이터를 복구할 수 있게 한다.
 function saveData(widgets) {
   try {
     fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true })
-    fs.writeFileSync(DATA_FILE, JSON.stringify(widgets, null, 2), 'utf-8')
+    if (fs.existsSync(DATA_FILE)) {
+      try { fs.copyFileSync(DATA_FILE, BACKUP_FILE) } catch (e) {}
+    }
+    const tmpFile = `${DATA_FILE}.tmp`
+    fs.writeFileSync(tmpFile, JSON.stringify(widgets, null, 2), 'utf-8')
+    fs.renameSync(tmpFile, DATA_FILE)
   } catch (e) { console.error('데이터 저장 실패:', e) }
 }
 
