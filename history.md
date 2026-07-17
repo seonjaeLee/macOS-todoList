@@ -76,6 +76,17 @@
 - **추가로 발견해 수정한 것**: `widget.css`/`memo-list.css`/`tray-menu.css`/`guide.html`/`tooltip.html`의 글꼴 스택이 전부 `-apple-system`, `'Helvetica Neue'`, `Pretendard` 등 macOS 전용/미번들 글꼴만 지정돼 있고 Windows용 글꼴이 하나도 없었음. Windows에서는 결국 브라우저가 임의로 대체 글꼴을 골라 쓰게 되어, 한자 키로 선택해 넣은 특수문자(㈜·℡·※ 등)가 네모 빈 칸(□)으로 깨져 보일 위험이 있었음 → 전 파일에 `'Malgun Gothic'`, `'Segoe UI'`를 명시적으로 추가.
 - `npm run verify` 통과. 다만 ㅁ+한자 키 흐름 자체는 Windows IME/Chromium 조합 이벤트에 달려 있어 macOS 샌드박스에서 재현·검증이 불가능함 — **Windows 실기 확인 필요**: 노트/메모에서 한글 자음 입력 후 한자 키로 특수문자 후보가 뜨는지, 선택 시 정상 삽입·표시되는지.
 
+### 메모 목록 개별 보이기/숨기기 + 작업노트 랜덤 색상 + 목록 스크롤 안 되는 버그 수정
+
+- **요청 배경**: 작업노트를 여러 개 만들 수 있게 되면서(위 항목), 숨긴 걸 개별로 다시 불러올 방법이 없다는 게 드러남("모두 보이기"만 있었음). 또 새 작업노트가 항상 같은 색으로만 생성됨(일반 메모는 랜덤). 메모 목록 창도 항목이 많아지면 스크롤이 전혀 안 됨.
+- **보이기/숨기기 토글**: `memo-list.js` 각 항목에 눈 아이콘 버튼 추가. 이미 존재했지만 아무 데서도 안 쓰이던 `toggle-widget-visibility` IPC(`main.js`)/`window.api.toggleWidgetVisibility`(`preload.js`)를 연결만 하면 됐음 — 메모든 작업노트든 항목 하나하나 다시 보이기/숨기기 가능해짐.
+- **작업노트 랜덤 색상**: `createDraftNoteData()`의 `color: COLORS[1]` 고정값을, 일반 메모(`addNewWidget`)가 쓰는 `getRandomBrightColor()`로 교체.
+- **메모 목록 스크롤 안 되는 버그** (가장 오래 걸린 문제): 처음엔 항목 수가 마침 창 높이(568px)에 거의 딱 맞아떨어져 스크롤 자체가 필요 없는 상태였던 것으로 오판(`contentClientHeight === contentScrollHeight`). 이후 사용자가 작업노트를 여러 개 더 만들어 17개까지 늘려서 재확인했는데도 `.content`의 `scrollHeight`가 여전히 `clientHeight`와 동일하게 568로 나옴 — 반면 `.list` 자체의 `getBoundingClientRect().height`는 730이었고 마지막 항목 좌표도 그만큼 아래에 실제로 렌더링돼 있었음. 즉 콘텐츠는 진짜로 넘치는데 스크롤 컨테이너(`.content`)가 그 오버플로를 인식하지 못하는 상태.
+  - **원인**: `.content`가 `display:flex; flex-direction:column`인데 직계 자식이 `.section` 하나뿐이었음 — 자식이 하나뿐인 flex 컨테이너에서 `overflow-y:auto`의 `scrollHeight` 계산이 자식의 실제 오버플로 크기를 제대로 상위로 반영하지 못하는 Chromium flex-in-flex 케이스였던 것으로 파악.
+  - **수정**: `.content`를 `display:flex`에서 `display:block`으로 변경(자식이 하나뿐이라 flex일 필요가 없었음). `flex:1; min-height:0`(부모 `.list-window`의 flex 아이템으로서의 크기 제약)와 `overflow-y:auto`는 유지.
+  - 이 버그는 macOS에서 Cmd+Option+I 개발자 도구를 임시로 띄워(`main.js`에 `openDevTools` 한 줄, `memo-list.js`에 `console.log` 진단 코드 추가) `clientHeight`/`scrollHeight`/`getBoundingClientRect()`를 실측하며 찾아냈고, 수정 후 진단 코드는 모두 제거함.
+- **Mac 실기 확인 완료**: 스크롤 정상 동작, 보이기/숨기기 토글 정상 동작, 작업노트 랜덤 색상 정상 동작 — 사용자가 직접 로컬 빌드로 확인함. `npm run verify` 통과.
+
 ---
 
 ## 2026-07-04

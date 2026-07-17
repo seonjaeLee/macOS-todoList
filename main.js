@@ -928,7 +928,7 @@ function createDraftNoteData() {
     id: `draft-${Date.now()}`,
     type: 'draft',
     title: '작업노트',
-    color: COLORS[1],
+    color: getRandomBrightColor(),
     text: '',
     collapsed: false,
     alwaysOnTop: false,

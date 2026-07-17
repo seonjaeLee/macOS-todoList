@@ -72,10 +72,9 @@ body {
 .content {
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: scroll;
+  display: block;
+  overflow-y: auto;
+  -webkit-app-region: no-drag;
   padding: 14px 16px;
 }
 
@@ -278,8 +277,41 @@ body.platform-win32 .item-main {
   gap: 6px;
 }
 
+/* ── 보이기/숨기기 토글 ── */
+.btn-icon-visibility {
+  border: none;
+  background: transparent;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.btn-icon-visibility:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.btn-icon-visibility svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex-shrink: 0;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 body.platform-win32 .btn-icon-delete,
-body.platform-win32 .btn-icon-float {
+body.platform-win32 .btn-icon-float,
+body.platform-win32 .btn-icon-visibility {
   width: 24px;
   height: 24px;
 }

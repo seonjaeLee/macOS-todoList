@@ -151,6 +151,34 @@ async function renderList() {
     const actions = document.createElement('div')
     actions.className = 'item-actions'
 
+    const btnVisibility = document.createElement('button')
+    btnVisibility.className = 'btn-icon-visibility'
+    btnVisibility.setAttribute('data-tooltip', widget.visible ? '숨기기' : '보이기')
+    btnVisibility.setAttribute('aria-label', widget.visible ? '숨기기' : '보이기')
+    btnVisibility.innerHTML = widget.visible
+      ? `
+        <svg viewBox="0 0 24 24">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      `
+      : `
+        <svg viewBox="0 0 24 24">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+          <circle cx="12" cy="12" r="3" />
+          <line x1="3" y1="3" x2="21" y2="21" />
+        </svg>
+      `
+    btnVisibility.addEventListener('click', async () => {
+      tooltipHoverEl = null
+      clearTimeout(tooltipTimer)
+      tooltipRequestId++
+      window.api.hideTooltip()
+      await window.api.toggleWidgetVisibility(widget.id)
+      await renderList()
+    })
+    actions.appendChild(btnVisibility)
+
     const btnFloat = document.createElement('button')
     btnFloat.className = 'btn-icon-float' + (widget.alwaysOnTop ? ' active' : '')
     btnFloat.setAttribute('data-tooltip', '항상 위에 띄우기')
