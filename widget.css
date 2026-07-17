@@ -50,7 +50,7 @@ body {
   height: 100%;
   background: var(--widget-color, #FFF176);
   overflow: hidden;
-  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, 'Helvetica Neue', 'Malgun Gothic', 'Segoe UI', sans-serif;
   user-select: none;
   display: flex;
   flex-direction: column;
@@ -233,7 +233,7 @@ body {
   border: none;
   border-radius: 4px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
-  font-family: Pretendard, -apple-system, 'Helvetica Neue', sans-serif;
+  font-family: Pretendard, -apple-system, 'Helvetica Neue', 'Malgun Gothic', 'Segoe UI', sans-serif;
   font-size: 11px;
   font-weight: 400;
   line-height: 1.35;
@@ -744,16 +744,14 @@ body.low-light .draft-text:empty::before {
   color: rgba(255,255,255,0.6) !important;
 }
 
-/* ═══ 초안 노트(싱글톤) 전용 — 추가/삭제 컨트롤 숨김 + 본문을 텍스트 영역으로 전환 ═══ */
+/* ═══ 작업노트 전용 — 새 메모 추가 컨트롤 숨김(작업노트는 트레이에서 추가) + 본문을 텍스트 영역으로 전환 ═══ */
 body.is-draft-note .titlebar-toolbar .btn-add-widget,
 body.is-draft-note.titlebar-expanded .titlebar-toolbar .btn-add-widget {
   display: none;
 }
 
 body.is-draft-note #more-add,
-body.is-draft-note #more-delete,
-body.is-draft-note [data-action="add"],
-body.is-draft-note [data-action="delete"] {
+body.is-draft-note [data-action="add"] {
   display: none;
 }
 

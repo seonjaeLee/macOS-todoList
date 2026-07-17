@@ -656,7 +656,7 @@ function handleTrayMenuAction(action) {
       openMemoListWindow()
       break
     case 'draft-note':
-      openOrFocusDraftNote()
+      addNewDraftNote()
       break
     case 'toggle-all':
       areAllVisible() ? hideAllWidgets() : showAllWidgets()
@@ -753,7 +753,7 @@ function setupApplicationMenu() {
           { type: 'separator' },
           { label: '메모 목록', click: () => openMemoListWindow() },
           { type: 'separator' },
-          { label: '초안 노트', click: () => openOrFocusDraftNote() },
+          { label: '작업노트', click: () => addNewDraftNote() },
         ],
       },
     ]))
@@ -798,7 +798,7 @@ function setupApplicationMenu() {
         { type: 'separator' },
         { label: '메모 목록', click: () => openMemoListWindow() },
         { type: 'separator' },
-        { label: '초안 노트', click: () => openOrFocusDraftNote() },
+        { label: '작업노트', click: () => addNewDraftNote() },
       ],
     },
   ]
@@ -824,7 +824,7 @@ function updateTrayMenu() {
     { type: 'separator' },
     { label: '메모 목록', click: () => openMemoListWindow() },
     { type: 'separator' },
-    { label: '초안 노트', click: () => openOrFocusDraftNote() },
+    { label: '작업노트', click: () => addNewDraftNote() },
     { type: 'separator' },
     {
       label: allVisible ? '모두 숨기기' : '모두 보이기',
@@ -922,30 +922,25 @@ ipcMain.on('close-guide', () => {
   if (guideWin && !guideWin.isDestroyed()) guideWin.close()
 })
 
-// ───────────────────────────── 초안 노트(싱글톤) ─────────────────────────────
-function createDefaultDraftNoteData() {
+// ───────────────────────────── 작업노트 ─────────────────────────────
+function createDraftNoteData() {
   return {
-    id: 'draft-note',
+    id: `draft-${Date.now()}`,
     type: 'draft',
-    title: '초안 노트',
+    title: '작업노트',
     color: COLORS[1],
     text: '',
     collapsed: false,
     alwaysOnTop: false,
-    hidden: true,
+    hidden: false,
     x: undefined,
     y: undefined,
   }
 }
 
-function openOrFocusDraftNote() {
-  const state = widgetStates.get('draft-note')
-  if (!state || state.win.isDestroyed()) return
-  state.win.show()
-  state.win.focus()
-  state.data.hidden = false
+function addNewDraftNote() {
+  createWidget(createDraftNoteData())
   persistAll()
-  updateTrayMenu()
   notifyWidgetListUpdated()
 }
 
@@ -1257,7 +1252,7 @@ app.whenReady().then(() => {
     }]
   }
   if (!savedWidgets.some((w) => w.type === 'draft')) {
-    savedWidgets.push(createDefaultDraftNoteData())
+    savedWidgets.push(createDraftNoteData())
   }
   savedWidgets.forEach((data) => createWidget(data))
   persistAll()

@@ -11,6 +11,10 @@
   - [ ] 초안 노트 볼드/취소선/하이라이트 단축키(mac `Cmd+B`/`Cmd+Shift+X`/`Cmd+Shift+H` → Windows는 `Ctrl+B`/`Ctrl+Shift+X`/`Ctrl+Shift+H`) 동작 확인(`widget.js` `handleFormatShortcut`, 이번엔 mac만 검증, `history.md` 2026-07-02)
   - [ ] `guide.html` Windows 문단(플랫폼별 안내 전환) 실기 확인(`history.md` 2026-07-02)
   - [ ] Phase 3 잔여: v1.2.0 릴리스 문서·공개 Release
+  - [ ] 위젯 데이터 저장 원자적 쓰기+백업(`main.js` `loadData`/`saveData`, `history.md` 2026-07-17) — 강제 종료 후 재실행 시 메모·노트 유지되는지 집 PC 실기 확인 필요
+  - [ ] 한글 IME 조합 중 Enter/Escape 오작동 수정(`widget.js`/`memo-list.js` `e.isComposing` 가드, `history.md` 2026-07-17) — 텍스트 블럭 선택 후 한글 재입력 실기 확인 필요
+  - [ ] 초안 노트 → **작업노트** 명칭 변경 + 다중 생성/삭제 지원(`main.js` `createDraftNoteData`/`addNewDraftNote`, `history.md` 2026-07-17) — Windows에서 트레이 "작업노트" 클릭 시 새 노트 추가되는지, 목록에서 삭제되는지 실기 확인 필요
+  - [ ] Windows 글꼴 스택에 `Malgun Gothic`/`Segoe UI` 추가(`widget.css` 등 5개 파일, `history.md` 2026-07-17) — ㅁ+한자 키로 넣은 특수문자가 네모(□)로 안 깨지는지, 한자 키 특수문자 후보 자체가 뜨는지 실기 확인 필요
 - 메모 백업 기능 추가 예정
 
 # 완료·진행 중

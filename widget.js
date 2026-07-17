@@ -82,7 +82,7 @@ function syncMenuFloatState() {
 
 async function runMenuAction(action) {
   if (!widgetData) return
-  if (widgetData.type === 'draft' && (action === 'add' || action === 'delete')) return
+  if (widgetData.type === 'draft' && action === 'add') return
   switch (action) {
     case 'add':
       closeAllMenus()
@@ -329,7 +329,7 @@ function handleClipboardShortcut(e, target) {
 const DRAFT_HIGHLIGHT_COLOR = '#fff59d'
 const DRAFT_HIGHLIGHT_RGB = 'rgb(255, 245, 157)'
 
-/** 초안 노트 전용 서식 단축키: Cmd/Ctrl+B 볼드, +Shift+X 취소선, +Shift+H 하이라이트 */
+/** 작업노트 전용 서식 단축키: Cmd/Ctrl+B 볼드, +Shift+X 취소선, +Shift+H 하이라이트 */
 function handleFormatShortcut(e) {
   if (!(e.metaKey || e.ctrlKey) || e.altKey) return false
   const key = e.key.toLowerCase()
@@ -347,7 +347,7 @@ function handleFormatShortcut(e) {
   }
 
   if (key === 'h' && e.shiftKey) {
-    // 초안 노트 배경 자체가 반투명 회색이라 queryCommandValue가 그 배경을 "배경 있음"으로
+    // 작업노트 배경 자체가 반투명 회색이라 queryCommandValue가 그 배경을 "배경 있음"으로
     // 잘못 잡는 경우가 있어, "직접 적용한 하이라이트 색과 일치하는지"만 비교한다.
     const current = document.queryCommandValue('backColor')
     const isHighlighted = current === DRAFT_HIGHLIGHT_RGB

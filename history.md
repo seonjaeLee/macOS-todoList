@@ -57,6 +57,25 @@
 - **수정** (`widget.js` `$title`/`label` keydown, `memo-list.js` `title` keydown): 세 곳 모두 `$newTodo`와 동일하게 `e.isComposing`일 때는 Enter/Escape 처리를 건너뛰도록 가드 추가.
 - `npm run verify` 통과. 정적 코드 분석으로 찾은 확실한 불일치/버그이고 증상과도 부합하지만, 샌드박스 제약으로 실제 한글 IME 재현 테스트는 못함 — **Windows 실기 확인 필요**: 텍스트 블럭 선택 후 한글로 덮어쓰기, 특히 마지막 글자 조합 중 Enter를 눌러 재현 시도.
 
+### 초안 노트 → 작업노트 명칭 변경 + 다중 생성/삭제 지원
+
+- **요청**: ① "초안 노트" 명칭을 "작업노트"로 변경 ② 노트를 여러 개 추가할 수 있게 변경(기존엔 앱 전체에 1개만 존재하는 싱글톤이라 추가·삭제 둘 다 불가능했음).
+- **변경 내용**:
+  - 사용자 노출 텍스트 전부 "초안 노트" → "작업노트"로 변경(`main.js` 메뉴 4곳, `tray-menu.js`, `guide.html`, `widget.js`/`widget.html` 내부 주석).
+  - `main.js`: 고정 id(`draft-note`)로 하나만 찾아 보여주던 `createDefaultDraftNoteData`/`openOrFocusDraftNote`를, 일반 메모(`addNewWidget`)와 동일한 패턴으로 `createDraftNoteData`(매번 `draft-${Date.now()}` 고유 id 생성)/`addNewDraftNote`(항상 새 위젯 생성)로 교체. 트레이·메뉴의 "작업노트" 클릭은 이제 "새 메모 추가"처럼 클릭할 때마다 새 작업노트를 하나씩 추가함. 최초 실행 시 최소 1개 보장하는 시작 로직은 유지.
+  - `widget.js` `runMenuAction`: `type === 'draft'`일 때 막던 액션에서 `delete`를 제외(삭제만 허용, 위젯 내부에서 "새 메모 추가"로 이어지는 `add`는 계속 차단).
+  - `widget.css`: `#more-delete`/`[data-action="delete"]`를 작업노트에서 숨기던 규칙 제거 — 삭제 버튼 노출.
+  - `memo-list.js`: 메모 목록에서 `type === 'draft'`일 때 삭제 버튼을 아예 안 만들던 조건 제거 — 일반 메모와 동일하게 삭제 가능.
+- 메모 목록(`메모 목록` 창)엔 개별 항목을 다시 "보이기"로 불러오는 기능 자체가 없음(전체 `모두 보이기`만 존재 — 기존 일반 메모와 동일한 제약이라 작업노트도 그 모델을 그대로 따름). 숨긴 작업노트를 다시 보려면 일반 메모와 마찬가지로 트레이의 "모두 보이기" 사용.
+- `npm run verify` 통과. **Windows 실기 확인 필요**: 트레이 "작업노트" 클릭 시 새 노트가 추가되는지, 메모 목록에서 작업노트 삭제가 되는지.
+
+### Windows 특수문자 입력(ㅁ+한자 키) 대응 — 글꼴 스택 보강
+
+- **요청 배경**: Windows 11에서 노트·메모에 원(₩) 등 특수문자를 넣고 싶은데 잘 안 됨. 붙여넣기로 시도했던 최초 사례는 메모장 글꼴이 `\`를 ₩ 모양으로 그려주는 표시상의 착시로 판단(실제 코드 결함 아님). 이후 사용자가 실제로 쓰려는 방식은 한글 자음 하나(예: ㅁ) 입력 후 한자 키로 여는 Windows 자체 특수문자 후보 목록 — 이건 OS/IME가 제공하는 기능이라 앱이 직접 만드는 부분은 없음.
+- **점검**: `widget.js`/`memo-list.js`/`main.js`/`preload.js`에 입력 문자를 걸러내거나 변형하는 코드는 없음(정규식 치환·sanitize 등 전무) — 앱이 특수문자 입력 자체를 막고 있지는 않음. 개요(`$memoDesc`)는 순수 `<textarea>`라 애초에 앱 코드 개입이 없고, 작업노트(`$draftText`)는 `contenteditable`이라 조합 관련 코드에 더 민감한데, 바로 위 항목에서 고친 "한글 조합 중 Enter 오작동" 버그가 같은 계열이라 그 수정으로 함께 개선됐을 가능성이 있음.
+- **추가로 발견해 수정한 것**: `widget.css`/`memo-list.css`/`tray-menu.css`/`guide.html`/`tooltip.html`의 글꼴 스택이 전부 `-apple-system`, `'Helvetica Neue'`, `Pretendard` 등 macOS 전용/미번들 글꼴만 지정돼 있고 Windows용 글꼴이 하나도 없었음. Windows에서는 결국 브라우저가 임의로 대체 글꼴을 골라 쓰게 되어, 한자 키로 선택해 넣은 특수문자(㈜·℡·※ 등)가 네모 빈 칸(□)으로 깨져 보일 위험이 있었음 → 전 파일에 `'Malgun Gothic'`, `'Segoe UI'`를 명시적으로 추가.
+- `npm run verify` 통과. 다만 ㅁ+한자 키 흐름 자체는 Windows IME/Chromium 조합 이벤트에 달려 있어 macOS 샌드박스에서 재현·검증이 불가능함 — **Windows 실기 확인 필요**: 노트/메모에서 한글 자음 입력 후 한자 키로 특수문자 후보가 뜨는지, 선택 시 정상 삽입·표시되는지.
+
 ---
 
 ## 2026-07-04

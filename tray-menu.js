@@ -43,7 +43,7 @@ async function render() {
   addSep()
   addButton('메모 목록', 'list')
   addSep()
-  addButton('초안 노트', 'draft-note')
+  addButton('작업노트', 'draft-note')
   addSep()
   addButton(state.allVisible ? '모두 숨기기' : '모두 보이기', 'toggle-all')
   addSep()

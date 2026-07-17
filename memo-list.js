@@ -173,24 +173,22 @@ async function renderList() {
 
     actions.appendChild(btnFloat)
 
-    if (widget.type !== 'draft') {
-      const btnDelete = document.createElement('button')
-      btnDelete.className = 'btn-icon-delete'
-      btnDelete.setAttribute('data-tooltip', '삭제')
-      btnDelete.setAttribute('aria-label', '삭제')
-      btnDelete.innerHTML = '<img src="Delete_icon.png" alt="" />'
-      btnDelete.addEventListener('click', async () => {
-        const ok = window.confirm('이 메모를 삭제할까요?')
-        if (!ok) return
-        tooltipHoverEl = null
-        clearTimeout(tooltipTimer)
-        tooltipRequestId++
-        window.api.hideTooltip()
-        await window.api.deleteWidgetById(widget.id)
-        await renderList()
-      })
-      actions.appendChild(btnDelete)
-    }
+    const btnDelete = document.createElement('button')
+    btnDelete.className = 'btn-icon-delete'
+    btnDelete.setAttribute('data-tooltip', '삭제')
+    btnDelete.setAttribute('aria-label', '삭제')
+    btnDelete.innerHTML = '<img src="Delete_icon.png" alt="" />'
+    btnDelete.addEventListener('click', async () => {
+      const ok = window.confirm('이 메모를 삭제할까요?')
+      if (!ok) return
+      tooltipHoverEl = null
+      clearTimeout(tooltipTimer)
+      tooltipRequestId++
+      window.api.hideTooltip()
+      await window.api.deleteWidgetById(widget.id)
+      await renderList()
+    })
+    actions.appendChild(btnDelete)
 
     item.appendChild(main)
     item.appendChild(actions)
