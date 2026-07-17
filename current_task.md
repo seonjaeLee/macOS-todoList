@@ -16,6 +16,7 @@
   - [ ] 초안 노트 → **작업노트** 명칭 변경 + 다중 생성/삭제 지원(`main.js` `createDraftNoteData`/`addNewDraftNote`, `history.md` 2026-07-17) — Windows에서 트레이 "작업노트" 클릭 시 새 노트 추가되는지, 목록에서 삭제되는지 실기 확인 필요
   - [ ] Windows 글꼴 스택에 `Malgun Gothic`/`Segoe UI` 추가(`widget.css` 등 5개 파일, `history.md` 2026-07-17) — ㅁ+한자 키로 넣은 특수문자가 네모(□)로 안 깨지는지, 한자 키 특수문자 후보 자체가 뜨는지 실기 확인 필요
   - [x] 메모 목록 보이기/숨기기 토글 + 작업노트 랜덤 색상 + 목록 스크롤 안 되는 버그(`memo-list.css` `.content` flex→block, `history.md` 2026-07-17) — **Mac 실기 확인 완료**(사용자 직접 테스트). Windows 실기 확인은 남음.
+  - [x] 다른 앱 창 위에서 메모/노트 리사이즈 안 되는 문제(`main.js` `createWidget` `resizable: true`→`false`, `history.md` 2026-07-17) — **Mac 실기 확인 완료**(사용자 직접 테스트, 다른 앱 창과 겹친 상태에서 재현·수정 확인). Windows에서도 같은 증상 보고됐던 건이라 Windows 실기 확인 필요.
 - 메모 백업 기능 추가 예정
 
 # 완료·진행 중

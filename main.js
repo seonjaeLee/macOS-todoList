@@ -505,7 +505,11 @@ function createWidget(data) {
     transparent: false,
     backgroundColor: data.color,
     roundedCorners: false,
-    resizable: true,
+    // 리사이즈는 자체 JS 핸들(.resize-handle)+IPC로 전부 직접 구현하므로
+    // OS 네이티브 리사이즈는 꺼둔다. 켜져 있으면 macOS가 창 가장자리에
+    // 보이지 않는 자체 리사이즈 감지 영역을 예약해 우리 핸들과 경쟁하고,
+    // 다른 앱 창이 인접해 있을 때 클릭이 그쪽으로 새는 원인이 됐다.
+    resizable: false,
     skipTaskbar: SKIP_WIDGET_TASKBAR,
     hasShadow: false,
     maximizable: false,   // macOS "타이틀바 더블클릭→줌" OS 동작 방지

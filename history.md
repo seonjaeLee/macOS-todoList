@@ -87,6 +87,14 @@
   - 이 버그는 macOS에서 Cmd+Option+I 개발자 도구를 임시로 띄워(`main.js`에 `openDevTools` 한 줄, `memo-list.js`에 `console.log` 진단 코드 추가) `clientHeight`/`scrollHeight`/`getBoundingClientRect()`를 실측하며 찾아냈고, 수정 후 진단 코드는 모두 제거함.
 - **Mac 실기 확인 완료**: 스크롤 정상 동작, 보이기/숨기기 토글 정상 동작, 작업노트 랜덤 색상 정상 동작 — 사용자가 직접 로컬 빌드로 확인함. `npm run verify` 통과.
 
+### 다른 앱 창 위에서 메모/노트 리사이즈가 안 되는 문제 수정
+
+- **증상**: 메모·노트 가장자리에 커서를 대서 리사이즈 커서로 바뀐 걸 확인하고 눌러도, 드래그가 안 먹히고 클릭이 위젯이 아니라 뒤/근처에 있는 다른 앱 창으로 새어나가 그 앱이 대신 포커스됨. Mac·Windows 둘 다 보고됨. 위젯을 빈 바탕화면 위로 옮겨서 시도하면 정상 동작 — 다른 앱 창과 겹쳐 있을 때만 재현됨.
+- **원인**: `createWidget()`(`main.js`)의 `BrowserWindow` 옵션에 `resizable: true`가 켜져 있었음. 이 앱은 리사이즈를 `.resize-handle`(가장자리 5~10px 얇은 div) + Pointer Capture + `setWindowBounds` IPC로 완전히 자체 구현하고 있는데, `resizable: true`가 같이 켜져 있으면 macOS/Windows가 창 가장자리에 보이지 않는 OS 자체 리사이즈 감지 영역을 추가로 예약해 우리 핸들과 같은 자리에서 경쟁하게 됨. 빈 바탕화면 위에서는 이 경쟁이 잘 안 드러나다가, 인접한 다른 앱 창이 있으면 OS 창 관리자가 그 경계에서 클릭을 엉뚱한 창으로 넘겨버리는 것으로 파악.
+- **진단 과정**: 처음엔 Pointer Capture가 드래그 도중 풀리는 것으로 추정해 `pointerdown`/`pointermove`/`pointerup`/`pointercancel`/`lostpointercapture`에 진단 로그를 넣고(`widget.js`), 위젯 창에 Cmd+Option+I로 개발자 도구를 여는 임시 단축키를 추가(`main.js`)했음. 하지만 사용자가 재현하는 과정에서 "클릭 자체가 다른 앱으로 넘어간다"는 더 정확한 증상을 확인해, 포인터 캡처가 아니라 OS 리사이즈 영역 충돌 쪽으로 원인을 좁힘.
+- **수정** (`main.js` `createWidget`): `resizable: true` → `resizable: false`. 진단 코드(콘솔 로그, DevTools 단축키)는 모두 제거.
+- **Mac 실기 확인 완료**: 다른 앱 창과 겹친 상태에서도 리사이즈 정상 동작 확인. `npm run verify` 통과. **Windows 실기 확인 필요**(Windows에서도 같은 증상이 보고됐던 문제라 같은 원인일 가능성이 높지만, `resizable` 옵션의 OS별 리사이즈 힌트 처리 방식이 다를 수 있어 별도 확인 필요).
+
 ---
 
 ## 2026-07-04
